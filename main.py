@@ -694,16 +694,6 @@ def search():
                             ab_combinations.append([month, day, minute, secs])
                             values.append(ab)
 
-        hour_count = max_hour_internal - min_hour_internal + 1
-
-        delay_count = max_delay_internal - min_delay_internal + 1
-
-        total_combinations = len(ab_combinations)*hour_count*delay_count
-
-        if total_combinations > 1000000:
-            raise ValueError(f"{total_combinations} combinations found. "
-                             f"Too many! Do not request for more than 1,000,000.")
-
         combinations = []
 
         for ab_combination in ab_combinations:
@@ -724,6 +714,8 @@ def search():
         random.shuffle(combinations)
 
         time = datetime.datetime.now()
+
+        total_combinations = len(combinations)
 
         for combination in combinations:
             checked += 1
