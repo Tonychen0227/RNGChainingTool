@@ -700,14 +700,14 @@ def search():
 
         total_combinations = len(ab_combinations)*hour_count*delay_count
 
-        if total_combinations > 300000:
+        if total_combinations > 1000000:
             raise ValueError(f"{total_combinations} combinations found. "
-                             f"Too many! Do not request for more than 300,000.")
+                             f"Too many! Do not request for more than 1,000,000.")
 
         combinations = []
 
         for ab_combination in ab_combinations:
-            for hour in range(min_hour_internal, min_hour_internal + 1):
+            for hour in range(min_hour_internal, max_hour_internal + 1):
                 for delay in range(min_delay_internal, max_delay_internal + 1):
                     combinations.append([ab_combination[0], ab_combination[1], hour, ab_combination[2],
                                          ab_combination[3], delay])
