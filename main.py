@@ -712,6 +712,9 @@ def search():
                     combinations.append([ab_combination[0], ab_combination[1], hour, ab_combination[2],
                                          ab_combination[3], delay])
 
+        del values
+        del ab_combinations
+
         checked = 0
         log_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}.csv'
         progress_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}_progress.csv'
@@ -780,7 +783,10 @@ def search():
                     f.writerow([seed_engine.get_initial_seed()])
                     f.writerow([str(frames)])
 
+                del seed_engine
+
             except WindowsError:
+                del seed_engine
                 continue
 
     except Exception as e:
