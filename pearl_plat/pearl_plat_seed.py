@@ -35,10 +35,10 @@ class PearlPlatSeedEngine:
         return self.initial_seed.upper()
 
     def get(self, frame):
-        if frame >= 100000:
-            raise Exception("You cannot ask for a frame larger than 100000")
+        if frame >= 20000:
+            raise ValueError("You cannot ask for a frame larger than 20000")
         elif frame < 0:
-            raise Exception("You cannot ask for a frame smaller than 0")
+            raise ValueError("You cannot ask for a frame smaller than 0")
         return self.frames[frame]
 
     def call(self, frame: int) -> str:
@@ -47,6 +47,12 @@ class PearlPlatSeedEngine:
             value = "0" + value
 
         return value
+
+    def get_level(self, frame: int, min_level: int, max_level: int):
+        call = self.call(frame + 1)
+        range = max_level - min_level + 1
+        increment = int(call, 16) % range
+        return increment + min_level
 
     def has_encounter(self, frame: int, enc_rate: int, movement_rate: int) -> bool:
         if frame <= 2:

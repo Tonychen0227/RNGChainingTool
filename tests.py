@@ -158,6 +158,8 @@ class Test:
 
         assert poke.get_hidden_power() == ("Bug", 54)
 
+        assert seed_engine.get_level(frame, 20, 30) == 30
+
         # endregion
 
         # region MethodJ surfing synchronize 2
