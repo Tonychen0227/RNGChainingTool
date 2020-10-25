@@ -434,6 +434,34 @@ def verify_method_1(seed_engine, method_1):
     return good
 
 
+def get_synchronize_natures(seed_engine, query):
+    target_query = get_raws_from_query(query)
+
+    current_limit = target_query["min_frame"]
+    max_limit = target_query["max_frame"]
+
+    ret = []
+
+    while current_limit <= max_limit:
+        target_query["min_frame"] = current_limit
+        if target_query["type"] == "MethodJ":
+            result = verify_method_j(seed_engine, target_query)
+            if not result:
+                return ret
+            else:
+                query_result = seed_engine.get_method_j_pokemon(result, target_query["grass_var"],
+                                                                target_query["surfing_var"])
+                ret.append(query_result[0].nature)
+                current_limit = result
+        elif target_query["type"] == "Method1":
+            result = verify_method_1(seed_engine, target_query)
+            if not result:
+                return ret
+            else:
+                query_result = seed_engine.get_method_one_pokemon(result)
+                current_limit = result
+
+
 def verify_method_j(seed_engine, method_j):
     min_frame = try_get("min_frame", method_j, int)
     max_frame = try_get("max_frame", method_j, int)
@@ -532,84 +560,66 @@ def verify_method_j(seed_engine, method_j):
 
     is_grass = method_j["grass_var"]
 
-    good = False
-
     synchronize_mon = method_j["synchronize_mon"]
-    synchronize_nature = None
+    synchronize_natures = [None]
+
+    good = False
 
     if synchronize_mon is not None and synchronize_mon.strip() != "":
         target_query = [x for x in queries if "label" in x.keys() and x["label"].get() == synchronize_mon]
-        if len(target_query) != 1:
-            raise ValueError("No viable synchronize mon found")
-
-        target_query = get_raws_from_query(target_query[0])
-
-        if target_query["type"] == "MethodJ":
-            result = verify_method_j(seed_engine, target_query)
-            if not result:
-                return good
-            else:
-                query_result = seed_engine.get_method_j_pokemon(result, target_query["grass_var"],
-                                                                target_query["surfing_var"])
-                synchronize_nature = query_result[0].nature
-        elif target_query["type"] == "Method1":
-            result = verify_method_1(seed_engine, target_query)
-            if not result:
-                return good
-            else:
-                query_result = seed_engine.get_method_one_pokemon(result)
-                synchronize_nature = query_result[0].nature
+        if len(target_query) == 1:
+            synchronize_natures += get_synchronize_natures(seed_engine, target_query[0])
 
     for frame in range(min_frame, max_frame + 1):
-        result = seed_engine.get_method_j_pokemon(frame, is_grass, is_surfing, synchronize_nature)
+        for sync_nature in synchronize_natures:
+            result = seed_engine.get_method_j_pokemon(frame, is_grass, is_surfing, sync_nature)
 
-        poke = result[0]
+            poke = result[0]
 
-        slot = result[1]
+            slot = result[1]
 
-        if enc_slots is not None and int(slot) not in enc_slots:
-            continue
-
-        if not seed_engine.has_encounter(frame, enc_rate, movement_rate):
-            continue
-
-        if natures is not None and poke.nature not in natures:
-            continue
-
-        hidden_power = poke.get_hidden_power()
-
-        if hidden_power_types is not None and hidden_power[0] not in hidden_power_types:
-            continue
-
-        if hidden_power_types is not None and min_hidden_power > int(hidden_power[1]):
-            continue
-
-        poke_ivs = poke.ivs
-
-        if min_ivs is not None:
-            low_ivs = [int(a) - b for a, b in zip(poke_ivs, min_ivs)]
-
-            if min(low_ivs) < 0:
+            if enc_slots is not None and int(slot) not in enc_slots:
                 continue
 
-        if max_ivs is not None:
-            high_ivs = [b - int(a) for a, b in zip(poke_ivs, max_ivs)]
-
-            if min(high_ivs) < 0:
+            if not seed_engine.has_encounter(frame, enc_rate, movement_rate):
                 continue
 
-        poke_item = poke.item_determinator
-        if min_item_deter is not None and int(poke_item) < min_item_deter:
-            continue
+            if natures is not None and poke.nature not in natures:
+                continue
 
-        if max_item_deter is not None and int(poke_item) > max_item_deter:
-            continue
+            hidden_power = poke.get_hidden_power()
 
-        if ability is not None and ability != int(poke.ability):
-            continue
+            if hidden_power_types is not None and hidden_power[0] not in hidden_power_types:
+                continue
 
-        good = frame
-        break
+            if hidden_power_types is not None and min_hidden_power > int(hidden_power[1]):
+                continue
+
+            poke_ivs = poke.ivs
+
+            if min_ivs is not None:
+                low_ivs = [int(a) - b for a, b in zip(poke_ivs, min_ivs)]
+
+                if min(low_ivs) < 0:
+                    continue
+
+            if max_ivs is not None:
+                high_ivs = [b - int(a) for a, b in zip(poke_ivs, max_ivs)]
+
+                if min(high_ivs) < 0:
+                    continue
+
+            poke_item = poke.item_determinator
+            if min_item_deter is not None and int(poke_item) < min_item_deter:
+                continue
+
+            if max_item_deter is not None and int(poke_item) > max_item_deter:
+                continue
+
+            if ability is not None and ability != int(poke.ability):
+                continue
+
+            return good
 
     return good
 
