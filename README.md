@@ -2,6 +2,8 @@
 
 Special Thanks to: [PokeFinder](https://github.com/Admiral-Fish/PokeFinder), [RNGReporter](https://github.com/Admiral-Fish/RNGReporter), [werster](https://www.twitter.com/wersterlobe)
 
+Only Diamond/Pearl/Platinum supported (no PKRS in Diamond/Pearl). HG/SS perhaps if enough interest.
+
 ## How to use
 1. You may choose to compile this using `pyinstaller` and then executing `pyinstaller --onefile main.py`
      * You may also choose to simply run `python main.py` (there are no outside dependencies)

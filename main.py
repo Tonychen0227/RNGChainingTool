@@ -684,12 +684,18 @@ def search():
             for day in range(min_day_internal, max_day_internal + 1):
                 for minute in range(min_mins_internal, max_mins_internal + 1):
                     for secs in range(min_secs_internal, max_secs_internal + 1):
-                        value = (month * day) + minute + secs
-                        if value not in values:
+                        ab = month * day + minute + secs
+                        ab = hex(ab & 0xff)[2:]
+
+                        while len(ab) < 2:
+                            ab = "0" + ab
+
+                        if ab not in values:
                             ab_combinations.append([month, day, minute, secs])
-                            values.append(value)
+                            values.append(ab)
 
         hour_count = max_hour_internal - min_hour_internal + 1
+
         delay_count = max_delay_internal - min_delay_internal + 1
 
         total_combinations = len(ab_combinations)*hour_count*delay_count
