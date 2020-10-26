@@ -3,7 +3,7 @@ import random
 import sys
 import traceback
 
-from pearl_plat.pearl_plat_seed import PearlPlatSeedEngine
+from pearl_plat.pearl_plat_seed import PearlPlatSeedEngine, get_natures_list
 import tkinter as tk
 from os import path
 import json
@@ -181,7 +181,7 @@ def add_method_j():
     entry2.insert(0, "Adamant/Modest")
 
     entry15 = tk.Entry(master)
-    entry15.insert(0, "Query Label")
+    entry15.insert(0, "PokeLabel/Nature1/Nature2")
 
     entry3 = tk.Entry(master)
     entry3.insert(0, "Fire/Psychic")
@@ -236,7 +236,7 @@ def add_method_j():
         "label": entry14,
         "enc_slots": entry1,
         "natures": entry2,
-        "synchronize_mon": entry15,
+        "synchronize_target": entry15,
         "hidden_power_types": entry3,
         "min_hidden_power": entry4,
         "min_ivs": entry5,
@@ -567,27 +567,33 @@ def verify_method_j(seed_engine, method_j):
 
     is_grass = method_j["is_grass_var"]
 
-    synchronize_mon = method_j["synchronize_mon"]
-    synchronize_natures = [None]
-
     good = False
 
-    if synchronize_mon is not None and synchronize_mon.strip() != "":
-        target_query = [x for x in queries if "label" in x.keys() and x["label"].get() == synchronize_mon]
-        if len(target_query) == 1:
-            raw_query = get_raws_from_query(target_query[0])
-            if raw_query["type"] == "MethodJ":
-                result = verify_method_j(seed_engine, raw_query)
-                if result:
-                    for x in result:
-                        query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
-                        synchronize_natures.append(query_result[0].nature)
-            elif raw_query["type"] == "Method1":
-                result = verify_method_1(seed_engine, raw_query)
-                if result:
-                    for x in result:
-                        query_result = seed_engine.get_method_one_pokemon(x)
-                        synchronize_natures.append(query_result[0].nature)
+    synchronize_target = method_j["synchronize_target"]
+    synchronize_natures = [None]
+
+    if synchronize_target is not None and synchronize_target.strip() != "":
+        synchronize_natures_list = synchronize_target.split("/")
+        target_natures = [x for x in synchronize_natures_list if x in get_natures_list()]
+
+        if len(target_natures) == 0:
+            target_query = [x for x in queries if "label" in x.keys() and x["label"].get() == synchronize_target]
+            if len(target_query) == 1:
+                raw_query = get_raws_from_query(target_query[0])
+                if raw_query["type"] == "MethodJ":
+                    result = verify_method_j(seed_engine, raw_query)
+                    if result:
+                        for x in result:
+                            query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
+                            synchronize_natures.append(query_result[0].nature)
+                elif raw_query["type"] == "Method1":
+                    result = verify_method_1(seed_engine, raw_query)
+                    if result:
+                        for x in result:
+                            query_result = seed_engine.get_method_one_pokemon(x)
+                            synchronize_natures.append(query_result[0].nature)
+        else:
+            synchronize_natures += target_natures
 
     for frame in range(min_frame, max_frame + 1):
         for sync_nature in synchronize_natures:
