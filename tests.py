@@ -11,7 +11,7 @@ class Test:
 
         frame = 1285  # Actual frame 1826
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, True)
+        poke_result = seed_engine.get_method_j_pokemon(frame, True, False)
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -37,7 +37,7 @@ class Test:
 
         frame = 1326  # Actual frame 1327
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, True)
+        poke_result = seed_engine.get_method_j_pokemon(frame, True, False)
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -62,7 +62,7 @@ class Test:
         # region MethodJ Synchronize success
         frame = 1326  # Actual frame 1327
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, True, "Quiet")
+        poke_result = seed_engine.get_method_j_pokemon(frame, True, False, "Quiet")
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -88,7 +88,7 @@ class Test:
 
         frame = 1327  # Actual frame 1328
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, True, "Quiet")
+        poke_result = seed_engine.get_method_j_pokemon(frame, True, False, "Quiet")
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -114,7 +114,7 @@ class Test:
 
         frame = 1790  # Actual frame 1791
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, False)
+        poke_result = seed_engine.get_method_j_pokemon(frame, False, True)
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -140,7 +140,7 @@ class Test:
 
         frame = 1790  # Actual frame 1791
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, False, "Impish")
+        poke_result = seed_engine.get_method_j_pokemon(frame, False, True, "Impish")
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -166,7 +166,7 @@ class Test:
 
         frame = 1811  # Actual frame 1812
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, False, "Impish")
+        poke_result = seed_engine.get_method_j_pokemon(frame, False, True, "Impish")
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -190,7 +190,7 @@ class Test:
 
         frame = 1381  # Actual 1382
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, False, "Impish")
+        poke_result = seed_engine.get_method_j_pokemon(frame, False, True, "Impish")
         poke = poke_result[0]
         slot = poke_result[1]
 
@@ -216,7 +216,7 @@ class Test:
 
         frame = 1381  # Actual 1382
 
-        poke_result = seed_engine.get_method_j_pokemon(frame, False)
+        poke_result = seed_engine.get_method_j_pokemon(frame, False, True)
         poke = poke_result[0]
         slot = poke_result[1]
 
