@@ -117,18 +117,10 @@ class PearlPlatSeedEngine:
 
         return new_pokemon
 
-    def get_method_j_pokemon(self, frame, is_grass: bool, is_surfing: bool, synchronize_nature: str = None) -> \
-            Tuple[Pokemon, int]:
+    def get_method_j_pokemon(self, frame, is_grass: bool, synchronize_nature: str = None) -> Tuple[Pokemon, int]:
         current_frame = frame
 
-        if (is_surfing and is_grass) or (not is_surfing and not is_grass):
-            raise ValueError("Surfing and Grass cannot both be ticked or both un-ticked")
-
-        if is_grass and is_surfing:
-            raise ValueError("Cannot be both grass and surfing")
-        if not is_grass and not is_surfing:
-            raise ValueError("Cannot be neither grass nor surfing")
-        if is_surfing:
+        if not is_grass:
             target_slots = [60, 90, 95, 99, 100]
         else:
             target_slots = [20, 40, 50, 60, 70, 80, 85, 90, 94, 98, 99, 100]
@@ -140,7 +132,7 @@ class PearlPlatSeedEngine:
                 slot = x
                 break
 
-        if is_surfing:
+        if not is_grass:
             current_frame += 1
 
         current_frame += 1
