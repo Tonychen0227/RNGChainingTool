@@ -259,11 +259,11 @@ def verify_method_j(seed_engine, queries, method_j):
     good = False
 
     if synchronize_mon is not None and synchronize_mon.strip() != "":
-        target_query = [x for x in queries if "label" in x.keys() and x["label"].get() == synchronize_mon]
+        target_query = [x for x in queries['queries'] if "label" in x.keys() and x["label"] == synchronize_mon]
         if len(target_query) == 1:
             raw_query = target_query[0]
             if raw_query["type"] == "MethodJ":
-                result = verify_method_j(seed_engine, raw_query)
+                result = verify_method_j(seed_engine, queries, raw_query)
                 if result:
                     for x in result:
                         query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
@@ -458,7 +458,7 @@ def search_details(details):
                 if query["type"] == "MethodJ":
                     verify_result = verify_method_j(seed_engine, details, query)
                     if not verify_result:
-                        raise WindowsError("")
+                        raise ModuleNotFoundError("")
                     else:
                         if "MethodJ" in frames.keys():
                             temp = frames["MethodJ"]
@@ -470,7 +470,7 @@ def search_details(details):
                 if query["type"] == "Method1":
                     verify_result = verify_method_1(seed_engine, query)
                     if not verify_result:
-                        raise WindowsError("")
+                        raise ModuleNotFoundError("")
                     else:
                         if "Method1" in frames.keys():
                             temp = frames["Method1"]
@@ -482,7 +482,7 @@ def search_details(details):
                 if query["type"] == "PKRS":
                     verify_result = verify_pkrs(seed_engine, query)
                     if not verify_result:
-                        raise WindowsError("")
+                        raise ModuleNotFoundError("")
                     else:
                         if "PKRS" in frames.keys():
                             temp = frames["PKRS"]
@@ -498,7 +498,7 @@ def search_details(details):
 
             del seed_engine
 
-        except WindowsError:
+        except ModuleNotFoundError:
             del seed_engine
             continue
 
