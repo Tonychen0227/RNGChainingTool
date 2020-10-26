@@ -1,4 +1,4 @@
-from pearl_plat.pearl_plat_seed import PearlPlatSeedEngine
+from pearl_plat_seed import PearlPlatSeedEngine
 
 
 class Test:

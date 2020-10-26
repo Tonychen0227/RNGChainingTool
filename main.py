@@ -3,7 +3,7 @@ import random
 import sys
 import traceback
 
-from pearl_plat.pearl_plat_seed import PearlPlatSeedEngine, get_natures_list
+from pearl_plat_seed import PearlPlatSeedEngine, get_natures_list
 import tkinter as tk
 from os import path
 import json
