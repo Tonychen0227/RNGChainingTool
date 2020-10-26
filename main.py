@@ -229,25 +229,29 @@ def verify_method_j(seed_engine, queries, method_j):
 
     movement_rate = try_get("movement_rate", method_j, int)
 
-    is_surfing = method_j["surfing_var"]
+    is_surfing = not method_j["is_grass_var"]
 
     min_level_surf = 0
+    max_level_surf = 0
     min_avail_level_surf = 0
     max_avail_level_surf = 0
     if is_surfing:
         try:
             min_level_surf = int(method_j["min_level_surf"])
+            max_level_surf = int(method_j["max_level_surf"])
             min_avail_level_surf = int(method_j["min_avail_level_surf"])
             max_avail_level_surf = int(method_j["max_avail_level_surf"])
             if min_level_surf < min_avail_level_surf:
-                raise ValueError("Surfing level below minimum")
-            if min_level_surf > max_avail_level_surf:
-                raise ValueError("Surfing level above maximum")
+                raise ValueError("Min surfing level below minimum")
+            if max_level_surf < min_level_surf:
+                raise ValueError("Max surfing level below min")
+            if max_level_surf > max_avail_level_surf:
+                raise ValueError("Max surfing level above maximum")
         except Exception as e:
             print(f"Bad surf level range: {e}")
             return
 
-    is_grass = method_j["grass_var"]
+    is_grass = method_j["is_grass_var"]
 
     synchronize_mon = method_j["synchronize_mon"]
     synchronize_natures = [None]
@@ -262,8 +266,7 @@ def verify_method_j(seed_engine, queries, method_j):
                 result = verify_method_j(seed_engine, raw_query)
                 if result:
                     for x in result:
-                        query_result = seed_engine.get_method_j_pokemon(x, raw_query["grass_var"],
-                                                                        raw_query["surfing_var"])
+                        query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
                         synchronize_natures.append(query_result[0].nature)
             elif raw_query["type"] == "Method1":
                 result = verify_method_1(seed_engine, raw_query)
@@ -274,7 +277,7 @@ def verify_method_j(seed_engine, queries, method_j):
 
     for frame in range(min_frame, max_frame + 1):
         for sync_nature in synchronize_natures:
-            result = seed_engine.get_method_j_pokemon(frame, is_grass, is_surfing, sync_nature)
+            result = seed_engine.get_method_j_pokemon(frame, is_grass, sync_nature)
 
             poke = result[0]
 
@@ -321,9 +324,9 @@ def verify_method_j(seed_engine, queries, method_j):
             if ability is not None and ability != int(poke.ability):
                 continue
 
-            if is_surfing and min_level_surf < seed_engine.get_level(frame, min_avail_level_surf, max_avail_level_surf):
+            if is_surfing:
                 level = seed_engine.get_level(frame, min_avail_level_surf, max_avail_level_surf)
-                if level < min_level_surf:
+                if level < min_level_surf or level > max_level_surf:
                     continue
 
             if not good:
