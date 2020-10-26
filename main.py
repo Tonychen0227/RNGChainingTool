@@ -171,11 +171,17 @@ queries = []
 
 
 def add_method_j():
+    entry14 = tk.Entry(master)
+    entry14.insert(0, "Poke Name :)")
+
     entry1 = tk.Entry(master)
     entry1.insert(0, "1/3/5/7/9")
 
     entry2 = tk.Entry(master)
     entry2.insert(0, "Adamant/Modest")
+
+    entry15 = tk.Entry(master)
+    entry15.insert(0, "Query Label")
 
     entry3 = tk.Entry(master)
     entry3.insert(0, "Fire/Psychic")
@@ -213,23 +219,17 @@ def add_method_j():
     variable3 = tk.BooleanVar(master)
     button3 = tk.Checkbutton(master, variable=variable3)
 
-    entry14 = tk.Entry(master)
-    entry14.insert(0, "Poke Name :)")
-
-    entry15 = tk.Entry(master)
-    entry15.insert(0, "Query Label")
-
     entry16 = tk.Entry(master)
     entry16.insert(0, 20)
+
+    entry19 = tk.Entry(master)
+    entry19.insert(0, 40)
 
     entry17 = tk.Entry(master)
     entry17.insert(0, 20)
 
     entry18 = tk.Entry(master)
     entry18.insert(0, 40)
-
-    entry19 = tk.Entry(master)
-    entry19.insert(0, 40)
 
     new_query = {
         "type": "MethodJ",
@@ -262,6 +262,9 @@ def add_method_j():
 
 
 def add_method_1():
+    entry13 = tk.Entry(master)
+    entry13.insert(0, "Poke name :)")
+
     entry2 = tk.Entry(master)
     entry2.insert(0, "Adamant/Modest")
 
@@ -285,9 +288,6 @@ def add_method_1():
 
     entry11 = tk.Entry(master)
     entry11.insert(0, 2000)
-
-    entry13 = tk.Entry(master)
-    entry13.insert(0, "Poke name :)")
 
     new_query = {
         "type": "Method1",
