@@ -553,7 +553,6 @@ def verify_method_j(seed_engine, method_j):
         try:
             min_level_surf = int(method_j["min_level_surf"])
             max_level_surf = int(method_j["max_level_surf"])
-            print(is_surfing, max_level_surf, min_level_surf)
             min_avail_level_surf = int(method_j["min_avail_level_surf"])
             max_avail_level_surf = int(method_j["max_avail_level_surf"])
             if min_level_surf < min_avail_level_surf:
@@ -561,7 +560,6 @@ def verify_method_j(seed_engine, method_j):
             if max_level_surf < min_level_surf:
                 raise ValueError("Max surfing level below min")
             if max_level_surf > max_avail_level_surf:
-                print("fool")
                 raise ValueError("Max surfing level above maximum")
         except Exception as e:
             error_message.set(f"Bad surf level range: {e}")
