@@ -42,7 +42,7 @@ def fill_queries():
 
         start_row += 1
         for item in query.keys():
-            if item in ["type", "surfing_var", "grass_var"]:
+            if item in ["type", "is_grass_var"]:
                 continue
             tk.Label(master, text=item).grid(row=start_row, column=current_column)
             current_column += 1
@@ -63,9 +63,9 @@ def get_raws_from_query(query):
         if key == "type":
             ret[key] = query[key]
             continue
-        if key in ["surfing", "grass"]:
+        if key in ["is_grass"]:
             continue
-        if key in ["surfing_var", "grass_var"]:
+        if key in ["is_grass_var"]:
             ret[key] = query[key].get()
             continue
         ret[key] = query[key].get()
@@ -138,7 +138,7 @@ def load_file():
                         if key == "type":
                             current[key] = query[key]
                             continue
-                        if key in ["surfing_var", "grass_var"]:
+                        if key in ["is_grass_var"]:
                             current[key].set(query[key])
                             continue
                         current[key].delete(0, tk.END)
@@ -210,9 +210,6 @@ def add_method_j():
     entry13 = tk.Entry(master)
     entry13.insert(0, 70)
 
-    variable2 = tk.BooleanVar(master)
-    button2 = tk.Checkbutton(master, variable=variable2)
-
     variable3 = tk.BooleanVar(master)
     button3 = tk.Checkbutton(master, variable=variable3)
 
@@ -223,13 +220,16 @@ def add_method_j():
     entry15.insert(0, "Query Label")
 
     entry16 = tk.Entry(master)
-    entry16.insert(0, 40)
+    entry16.insert(0, 20)
 
     entry17 = tk.Entry(master)
     entry17.insert(0, 20)
 
     entry18 = tk.Entry(master)
     entry18.insert(0, 40)
+
+    entry19 = tk.Entry(master)
+    entry19.insert(0, 40)
 
     new_query = {
         "type": "MethodJ",
@@ -248,11 +248,10 @@ def add_method_j():
         "max_frame": entry11,
         "enc_rate": entry12,
         "movement_rate": entry13,
-        "surfing": button2,
-        "surfing_var": variable2,
-        "grass": button3,
-        "grass_var": variable3,
+        "is_grass": button3,
+        "is_grass_var": variable3,
         "min_level_surf": entry16,
+        "max_level_surf": entry19,
         "min_avail_level_surf": entry17,
         "max_avail_level_surf": entry18
     }
@@ -544,25 +543,31 @@ def verify_method_j(seed_engine, method_j):
 
     movement_rate = try_get("movement_rate", method_j, int)
 
-    is_surfing = method_j["surfing_var"]
+    is_surfing = not method_j["is_grass_var"]
 
     min_level_surf = 0
+    max_level_surf = 0
     min_avail_level_surf = 0
     max_avail_level_surf = 0
     if is_surfing:
         try:
             min_level_surf = int(method_j["min_level_surf"])
+            max_level_surf = int(method_j["max_level_surf"])
+            print(is_surfing, max_level_surf, min_level_surf)
             min_avail_level_surf = int(method_j["min_avail_level_surf"])
             max_avail_level_surf = int(method_j["max_avail_level_surf"])
             if min_level_surf < min_avail_level_surf:
-                raise ValueError("Surfing level below minimum")
-            if min_level_surf > max_avail_level_surf:
-                raise ValueError("Surfing level above maximum")
+                raise ValueError("Min surfing level below minimum")
+            if max_level_surf < min_level_surf:
+                raise ValueError("Max surfing level below min")
+            if max_level_surf > max_avail_level_surf:
+                print("fool")
+                raise ValueError("Max surfing level above maximum")
         except Exception as e:
             error_message.set(f"Bad surf level range: {e}")
             return
 
-    is_grass = method_j["grass_var"]
+    is_grass = method_j["is_grass_var"]
 
     synchronize_mon = method_j["synchronize_mon"]
     synchronize_natures = [None]
@@ -577,8 +582,7 @@ def verify_method_j(seed_engine, method_j):
                 result = verify_method_j(seed_engine, raw_query)
                 if result:
                     for x in result:
-                        query_result = seed_engine.get_method_j_pokemon(x, raw_query["grass_var"],
-                                                                        raw_query["surfing_var"])
+                        query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
                         synchronize_natures.append(query_result[0].nature)
             elif raw_query["type"] == "Method1":
                 result = verify_method_1(seed_engine, raw_query)
@@ -589,7 +593,7 @@ def verify_method_j(seed_engine, method_j):
 
     for frame in range(min_frame, max_frame + 1):
         for sync_nature in synchronize_natures:
-            result = seed_engine.get_method_j_pokemon(frame, is_grass, is_surfing, sync_nature)
+            result = seed_engine.get_method_j_pokemon(frame, is_grass, sync_nature)
 
             poke = result[0]
 
@@ -636,9 +640,9 @@ def verify_method_j(seed_engine, method_j):
             if ability is not None and ability != int(poke.ability):
                 continue
 
-            if is_surfing and min_level_surf < seed_engine.get_level(frame, min_avail_level_surf, max_avail_level_surf):
+            if is_surfing:
                 level = seed_engine.get_level(frame, min_avail_level_surf, max_avail_level_surf)
-                if level < min_level_surf:
+                if level < min_level_surf or level > max_level_surf:
                     continue
 
             if not good:
