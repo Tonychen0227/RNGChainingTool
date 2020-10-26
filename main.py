@@ -1,5 +1,6 @@
 import csv
 import random
+import sys
 import traceback
 
 from pearl_plat.pearl_plat_seed import PearlPlatSeedEngine
@@ -649,173 +650,176 @@ def verify_method_j(seed_engine, method_j):
     return good
 
 
+def search(details):
+    min_month_internal = try_get("Minmonth", details, int)
+    max_month_internal = try_get("Maxmonth", details, int)
+    min_day_internal = try_get("Minday", details, int)
+    max_day_internal = try_get("Maxday", details, int)
+    min_hour_internal = try_get("Minhour", details, int)
+    max_hour_internal = try_get("Maxhour", details, int)
+    min_mins_internal = try_get("Minmins", details, int)
+    max_mins_internal = try_get("Maxmins", details, int)
+    min_secs_internal = try_get("Minsecs", details, int)
+    max_secs_internal = try_get("Maxsecs", details, int)
+    min_delay_internal = try_get("Mindelay", details, int)
+    max_delay_internal = try_get("Maxdelay", details, int)
+
+    if min_month_internal > max_month_internal:
+        raise ValueError("Min month larger than max month")
+
+    if min_month_internal < 1 or max_month_internal > 12:
+        raise ValueError("Month must be in between 1, 12")
+
+    if min_day_internal > max_day_internal:
+        raise ValueError("Min day larger than max day")
+
+    if min_day_internal < 1 or max_day_internal > 31:
+        raise ValueError("Day must be in between 1, 31")
+
+    if min_hour_internal > max_hour_internal:
+        raise ValueError("Min hour larger than max hour")
+
+    if min_hour_internal < 0 or max_hour_internal > 23:
+        raise ValueError("Hour must be in between 0, 23")
+
+    if min_mins_internal > max_mins_internal:
+        raise ValueError("Min mins larger than max mins")
+
+    if min_mins_internal < 0 or max_mins_internal > 59:
+        raise ValueError("Mins must be in between 0, 59")
+
+    if min_secs_internal > max_secs_internal:
+        raise ValueError("Min secs larger than max secs")
+
+    if min_secs_internal < 0 or max_secs_internal > 59:
+        raise ValueError("Secs must be in between 0, 59")
+
+    if min_delay_internal > max_delay_internal:
+        raise ValueError("Min delay larger than max delay")
+
+    if min_delay_internal < 0:
+        raise ValueError("Delay must not be lower than 0")
+
+    values = []
+    ab_combinations = []
+
+    for month in range(min_month_internal, max_month_internal + 1):
+        if month in [1, 3, 5, 7, 8, 10, 12]:
+            if max_day_internal > 31:
+                max_day_internal = 31
+        elif month == 2:
+            if max_day_internal > 28:
+                max_day_internal = 28
+        else:
+            if max_day_internal > 30:
+                max_day_internal = 30
+
+        for day in range(min_day_internal, max_day_internal + 1):
+            for minute in range(min_mins_internal, max_mins_internal + 1):
+                for secs in range(min_secs_internal, max_secs_internal + 1):
+                    ab = month * day + minute + secs
+                    ab = hex(ab & 0xff)[2:]
+
+                    while len(ab) < 2:
+                        ab = "0" + ab
+
+                    if ab not in values:
+                        ab_combinations.append([month, day, minute, secs])
+                        values.append(ab)
+
+    combinations = []
+
+    for ab_combination in ab_combinations:
+        for hour in range(min_hour_internal, max_hour_internal + 1):
+            for delay in range(min_delay_internal, max_delay_internal + 1):
+                combinations.append([ab_combination[0], ab_combination[1], hour, ab_combination[2],
+                                     ab_combination[3], delay])
+
+    del values
+    del ab_combinations
+
+    checked = 0
+    log_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}.csv'
+    progress_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}_progress.csv'
+    if "queries" not in details.keys():
+        return
+
+    random.shuffle(combinations)
+
+    time = datetime.datetime.now()
+
+    total_combinations = len(combinations)
+
+    for combination in combinations:
+        checked += 1
+
+        seed_engine = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                          combination[4], combination[5])
+
+        if checked % 100 == 0:
+            current_time = datetime.datetime.now()
+            total_seconds = (current_time - time).total_seconds()
+            with open(progress_file_name, 'a+') as progress_file:
+                progress = csv.writer(progress_file, lineterminator='\n')
+                progress.writerow([f"Checked {checked} of {total_combinations}, Elapsed {total_seconds:.2f}s, ETA "
+                                   f"{((total_seconds / checked) * (total_combinations - checked)):.2f}s"])
+
+        try:
+            frames = {}
+            for query in details["queries"]:
+                if query["type"] == "MethodJ":
+                    verify_result = verify_method_j(seed_engine, query)
+                    if not verify_result:
+                        raise WindowsError("")
+                    else:
+                        if "MethodJ" in frames.keys():
+                            temp = frames["MethodJ"]
+                            temp.append(verify_result)
+                            frames["MethodJ"] = temp
+                        else:
+                            frames["MethodJ"] = [verify_result]
+
+                if query["type"] == "Method1":
+                    verify_result = verify_method_1(seed_engine, query)
+                    if not verify_result:
+                        raise WindowsError("")
+                    else:
+                        if "Method1" in frames.keys():
+                            temp = frames["Method1"]
+                            temp.append(verify_result)
+                            frames["Method1"] = temp
+                        else:
+                            frames["Method1"] = [verify_result]
+
+                if query["type"] == "PKRS":
+                    verify_result = verify_pkrs(seed_engine, query)
+                    if not verify_result:
+                        raise WindowsError("")
+                    else:
+                        if "PKRS" in frames.keys():
+                            temp = frames["PKRS"]
+                            temp.append(verify_result)
+                            frames["PKRS"] = temp
+                        else:
+                            frames["PKRS"] = [verify_result]
+
+            with open(log_file_name, 'a+') as outfile:
+                f = csv.writer(outfile, lineterminator='\n')
+                f.writerow([seed_engine.get_initial_seed()])
+                f.writerow([str(frames)])
+
+            del seed_engine
+
+        except WindowsError:
+            del seed_engine
+            continue
+
+
 def search():
     details = extract_details()
 
     try:
-        min_month_internal = try_get("Minmonth", details, int)
-        max_month_internal = try_get("Maxmonth", details, int)
-        min_day_internal = try_get("Minday", details, int)
-        max_day_internal = try_get("Maxday", details, int)
-        min_hour_internal = try_get("Minhour", details, int)
-        max_hour_internal = try_get("Maxhour", details, int)
-        min_mins_internal = try_get("Minmins", details, int)
-        max_mins_internal = try_get("Maxmins", details, int)
-        min_secs_internal = try_get("Minsecs", details, int)
-        max_secs_internal = try_get("Maxsecs", details, int)
-        min_delay_internal = try_get("Mindelay", details, int)
-        max_delay_internal = try_get("Maxdelay", details, int)
-
-        if min_month_internal > max_month_internal:
-            raise ValueError("Min month larger than max month")
-
-        if min_month_internal < 1 or max_month_internal > 12:
-            raise ValueError("Month must be in between 1, 12")
-
-        if min_day_internal > max_day_internal:
-            raise ValueError("Min day larger than max day")
-
-        if min_day_internal < 1 or max_day_internal > 31:
-            raise ValueError("Day must be in between 1, 31")
-
-        if min_hour_internal > max_hour_internal:
-            raise ValueError("Min hour larger than max hour")
-
-        if min_hour_internal < 0 or max_hour_internal > 23:
-            raise ValueError("Hour must be in between 0, 23")
-
-        if min_mins_internal > max_mins_internal:
-            raise ValueError("Min mins larger than max mins")
-
-        if min_mins_internal < 0 or max_mins_internal > 59:
-            raise ValueError("Mins must be in between 0, 59")
-
-        if min_secs_internal > max_secs_internal:
-            raise ValueError("Min secs larger than max secs")
-
-        if min_secs_internal < 0 or max_secs_internal > 59:
-            raise ValueError("Secs must be in between 0, 59")
-
-        if min_delay_internal > max_delay_internal:
-            raise ValueError("Min delay larger than max delay")
-
-        if min_delay_internal < 0:
-            raise ValueError("Delay must not be lower than 0")
-
-        values = []
-        ab_combinations = []
-
-        for month in range(min_month_internal, max_month_internal + 1):
-            if month in [1, 3, 5, 7, 8, 10, 12]:
-                if max_day_internal > 31:
-                    max_day_internal = 31
-            elif month == 2:
-                if max_day_internal > 28:
-                    max_day_internal = 28
-            else:
-                if max_day_internal > 30:
-                    max_day_internal = 30
-
-            for day in range(min_day_internal, max_day_internal + 1):
-                for minute in range(min_mins_internal, max_mins_internal + 1):
-                    for secs in range(min_secs_internal, max_secs_internal + 1):
-                        ab = month * day + minute + secs
-                        ab = hex(ab & 0xff)[2:]
-
-                        while len(ab) < 2:
-                            ab = "0" + ab
-
-                        if ab not in values:
-                            ab_combinations.append([month, day, minute, secs])
-                            values.append(ab)
-
-        combinations = []
-
-        for ab_combination in ab_combinations:
-            for hour in range(min_hour_internal, max_hour_internal + 1):
-                for delay in range(min_delay_internal, max_delay_internal + 1):
-                    combinations.append([ab_combination[0], ab_combination[1], hour, ab_combination[2],
-                                         ab_combination[3], delay])
-
-        del values
-        del ab_combinations
-
-        checked = 0
-        log_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}.csv'
-        progress_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}_progress.csv'
-        if "queries" not in details.keys():
-            return
-
-        random.shuffle(combinations)
-
-        time = datetime.datetime.now()
-
-        total_combinations = len(combinations)
-
-        for combination in combinations:
-            checked += 1
-
-            seed_engine = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                              combination[4], combination[5])
-
-            if checked % 100 == 0:
-                current_time = datetime.datetime.now()
-                total_seconds = (current_time - time).total_seconds()
-                with open(progress_file_name, 'a+') as progress_file:
-                    progress = csv.writer(progress_file, lineterminator='\n')
-                    progress.writerow([f"Checked {checked} of {total_combinations}, Elapsed {total_seconds:.2f}s, ETA "
-                                       f"{((total_seconds / checked) * (total_combinations - checked)):.2f}s"])
-
-            try:
-                frames = {}
-                for query in details["queries"]:
-                    if query["type"] == "MethodJ":
-                        verify_result = verify_method_j(seed_engine, query)
-                        if not verify_result:
-                            raise WindowsError("")
-                        else:
-                            if "MethodJ" in frames.keys():
-                                temp = frames["MethodJ"]
-                                temp.append(verify_result)
-                                frames["MethodJ"] = temp
-                            else:
-                                frames["MethodJ"] = [verify_result]
-
-                    if query["type"] == "Method1":
-                        verify_result = verify_method_1(seed_engine, query)
-                        if not verify_result:
-                            raise WindowsError("")
-                        else:
-                            if "Method1" in frames.keys():
-                                temp = frames["Method1"]
-                                temp.append(verify_result)
-                                frames["Method1"] = temp
-                            else:
-                                frames["Method1"] = [verify_result]
-
-                    if query["type"] == "PKRS":
-                        verify_result = verify_pkrs(seed_engine, query)
-                        if not verify_result:
-                            raise WindowsError("")
-                        else:
-                            if "PKRS" in frames.keys():
-                                temp = frames["PKRS"]
-                                temp.append(verify_result)
-                                frames["PKRS"] = temp
-                            else:
-                                frames["PKRS"] = [verify_result]
-
-                with open(log_file_name, 'a+') as outfile:
-                    f = csv.writer(outfile, lineterminator='\n')
-                    f.writerow([seed_engine.get_initial_seed()])
-                    f.writerow([str(frames)])
-
-                del seed_engine
-
-            except WindowsError:
-                del seed_engine
-                continue
-
+        search(details)
     except Exception as e:
         error_message.set(str(e))
         traceback.print_exc()
@@ -824,6 +828,9 @@ def search():
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if os.path.exists(sys.argv[1]):
+
     Test()
 
     current_row = 0
