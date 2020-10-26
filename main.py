@@ -650,7 +650,7 @@ def verify_method_j(seed_engine, method_j):
     return good
 
 
-def search(details):
+def search_details(details):
     min_month_internal = try_get("Minmonth", details, int)
     max_month_internal = try_get("Maxmonth", details, int)
     min_day_internal = try_get("Minday", details, int)
@@ -819,7 +819,7 @@ def search():
     details = extract_details()
 
     try:
-        search(details)
+        search_details(details)
     except Exception as e:
         error_message.set(str(e))
         traceback.print_exc()
@@ -828,10 +828,13 @@ def search():
 
 
 if __name__ == "__main__":
+    Test()
+
     if len(sys.argv) > 1:
         if os.path.exists(sys.argv[1]):
-
-    Test()
+            with open(sys.argv[1]) as json_file:
+                existing = json.load(json_file)
+                search_details(existing)
 
     current_row = 0
 
