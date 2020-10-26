@@ -30,7 +30,7 @@
       "enc_rate": "30",
       "movement_rate": "40",
       "surfing_var": false,
-      "grass_var": true
+      "is_grass_var": true
     },
     {
       "type": "MethodJ",
@@ -50,7 +50,7 @@
       "enc_rate": "10",
       "movement_rate": "40",
       "surfing_var": true,
-      "grass_var": false
+      "is_grass_var": false
     }
   ],
   "Minmonth": "1",
