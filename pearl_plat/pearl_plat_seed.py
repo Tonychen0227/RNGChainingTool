@@ -4,6 +4,14 @@ from typing import Tuple
 from models.pokemon import Pokemon
 
 
+def get_natures_list():
+    natures = ["Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish",
+               "Lax", "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful",
+               "Rash", "Calm", "Gentle", "Sassy", "Careful", "Quirky"]
+
+    return natures
+
+
 class PearlPlatSeedEngine:
     def __init__(self, month, day, hour, minute, second, delay):
         ab = month * day + minute + second
@@ -84,16 +92,12 @@ class PearlPlatSeedEngine:
 
         pid = second_call + first_call
 
-        natures = ["Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish",
-                   "Lax", "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful",
-                   "Rash", "Calm", "Gentle", "Sassy", "Careful", "Quirky"]
-
         nature_value = int(pid, 16) % 25
 
         while nature_value > 24:
             nature_value -= 25
 
-        nature = natures[nature_value]
+        nature = get_natures_list()[nature_value]
 
         ability = int(pid, 16) % 2
 
@@ -139,9 +143,7 @@ class PearlPlatSeedEngine:
 
         call = self.call(current_frame)
 
-        natures = ["Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish",
-                   "Lax", "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful",
-                   "Rash", "Calm", "Gentle", "Sassy", "Careful", "Quirky"]
+        natures = get_natures_list()
 
         if synchronize_nature is not None:
             if int(call, 16) >> 15 == 0:

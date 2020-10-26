@@ -34,8 +34,10 @@ Note: Seeds are 0 indexed. What this means is that "603" in the report actually 
     * enc_rate is 10 in caves/water, 30 in grass
     * movement_rate is 40 on foot or surfing, 70 if you have a bike (70 produces more hits, so do 70 if you have bike)
   * One of is_grass and is_surfing must be checked.
-  * Important: if you choose to use synchronize, you must input the label of the Pokemon that is to have synchronize
+  * Important: if you choose to use synchronize, you must input the label of the Pokemon that is to have synchronize, or a list of "/" separated natures
     * e.g. To use MethodJ encounter named "Abra" has ability "Synchronize" as your synchronize lead, the synchronize label must be "Abra"
+    * it is also possible to give a list of natures such as "Adamant/Modest" or just Adamant
+      * You MAY NOT mix natures and labels. If any of the arguments can be parsed as a nature, it will only see them as natures not labels.
 * PKRS (Pokerus)
   * Input the RNG frame range you want to have Pokerus. Script returns if any of the frame Primary RNG calls are "4000", "8000" or "C000" (TY werster)
   
