@@ -202,7 +202,13 @@ def search_details(details):
                             f"0: {seed_engine.get_tid_sid()[0]} "
                             f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
                 f.writerow([f"# of Encounters in first {max(max_frames, 1000)} frames: {total_encounters}"])
-                f.writerow([str(frames)])
+                for frame in frames["Method1"]:
+                    f.writerow([f"Method1 at frame {frame}: {seed_engine.get_method_one_pokemon(frame).print()}"])
+
+                del frames["Method1"]
+
+                if len(frames.keys()) > 0:
+                    f.writerow([str(frames)])
 
                 del four_early, two_early, two_late, four_late
 
