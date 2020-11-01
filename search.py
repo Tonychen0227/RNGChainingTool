@@ -125,13 +125,15 @@ def search_details(details):
 
     max_frames = max([int(y["max_frame"]) for y in inner_queries])
 
+    total_encounters = 0
+
     for combination in combinations:
         checked += 1
 
         seed_engine = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
                                           combination[4], combination[5])
 
-        seed_engine.populate(max_frames)
+        seed_engine.populate(max(max_frames, 1000))
 
         if checked % 100 == 0:
             current_time = datetime.datetime.now()
@@ -180,6 +182,10 @@ def search_details(details):
                         else:
                             frames["PKRS"] = [verify_result]
 
+            for x in range(100, max(max_frames, 1000)):
+                if seed_engine.has_encounter(x, 30, 40):
+                    total_encounters += 1
+
             with open(log_file_name, 'a+') as outfile:
                 f = csv.writer(outfile, lineterminator='\n')
                 f.writerow([f"Seed {seed_engine.get_initial_seed()} (Year 2000) (on {combination[0]}/{combination[1]} "
@@ -195,6 +201,7 @@ def search_details(details):
                 f.writerow([f"SIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
                             f"0: {seed_engine.get_tid_sid()[0]} "
                             f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
+                f.writerow([f"# of Encounters in first {max(max_frames, 1000)} frames: {total_encounters}"])
                 f.writerow([str(frames)])
 
                 del four_early, two_early, two_late, four_late
