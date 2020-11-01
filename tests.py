@@ -7,6 +7,9 @@ class Test:
 
         assert seed_engine.initial_seed == "55121657"
 
+        # assert seed_engine.tid == 1218
+        # assert seed_engine.sid == 16914
+
         # region methodJ No Synchronize 1
 
         frame = 1285  # Actual frame 1826
@@ -57,6 +60,28 @@ class Test:
 
         assert poke.occid == 1338
 
+        # endregion
+
+        # region Shiny MethodJ
+        frame = 17471  # Actual frame 17472
+
+        poke_result = seed_engine.get_method_j_pokemon(frame, True)
+        poke = poke_result[0]
+        slot = poke_result[1]
+
+        assert poke.pid == "2c166ac5"
+
+        assert poke.ivs == (17, 4, 31, 15, 2, 14)
+
+        assert poke.nature == "Naughty"
+
+        assert poke.ability == 1
+
+        assert slot == 8
+
+        assert poke.get_hidden_power() == ("Bug", 68)
+
+        # assert poke.is_shiny()
         # endregion
 
         # region MethodJ Synchronize success

@@ -39,8 +39,12 @@ class PearlPlatSeedEngine:
         for x in range(1, 20000):
             self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
 
+        self.cached_method_1 = {}
+
+
     def get_initial_seed(self):
         return self.initial_seed.upper()
+
 
     def get(self, frame):
         if frame >= 20000:
@@ -81,6 +85,9 @@ class PearlPlatSeedEngine:
             return False
 
     def get_method_one_pokemon(self, frame) -> Pokemon:
+        if frame in self.cached_method_1:
+            return self.cached_method_1[frame]
+
         current_frame = frame
         first_call = self.call(current_frame)
         current_frame += 1
@@ -115,9 +122,9 @@ class PearlPlatSeedEngine:
 
         determinator = int(pid[-2:], 16)
 
-        has_pokerus = self.has_pokerus(frame + 4)
+        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, 0)
 
-        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, has_pokerus, 0)
+        self.cached_method_1[frame] = new_pokemon
 
         return new_pokemon
 
@@ -175,7 +182,7 @@ class PearlPlatSeedEngine:
         while len(pid) < 8:
             pid = "0" + pid
 
-        determinator = int(pid[-2:], 16)
+        item_determinator = int(pid[-2:], 16)
 
         big_hex = self.call(call_1 + 2) + self.call(call_2 + 2)
         big_binary = bin(int(big_hex, 16))[2:].zfill(32)
@@ -199,7 +206,4 @@ class PearlPlatSeedEngine:
 
         occid_item = occid + 4
 
-        has_pokerus = self.has_pokerus(occid_item)
-
-        return Pokemon(frame, pid, ability, ivs, nature, determinator, occid, has_pokerus,
-                       int(self.call(occid_item), 16) % 100), slot
+        return Pokemon(frame, pid, ability, ivs, nature, item_determinator, occid, int(self.call(occid_item), 16) % 100), slot

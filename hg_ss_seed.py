@@ -115,9 +115,7 @@ class HGSSSeedEngine:
 
         determinator = int(pid[-2:], 16)
 
-        has_pokerus = self.has_pokerus(frame + 4)
-
-        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, has_pokerus, 0)
+        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, 0)
 
         return new_pokemon
 

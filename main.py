@@ -42,7 +42,7 @@ def fill_queries():
 
         start_row += 1
         for item in query.keys():
-            if item in ["type", "is_grass_var"]:
+            if item in ["type", "is_grass_var", "is_shiny_var", "ignore_encounter_check_var"]:
                 continue
             tk.Label(master, text=item).grid(row=start_row, column=current_column)
             current_column += 1
@@ -63,9 +63,9 @@ def get_raws_from_query(query):
         if key == "type":
             ret[key] = query[key]
             continue
-        if key in ["is_grass"]:
+        if key in ["is_grass", "is_shiny", "ignore_encounter_check"]:
             continue
-        if key in ["is_grass_var"]:
+        if key in ["is_grass_var", "is_shiny_var", "ignore_encounter_check_var"]:
             ret[key] = query[key].get()
             continue
         ret[key] = query[key].get()
@@ -138,7 +138,7 @@ def load_file():
                         if key == "type":
                             current[key] = query[key]
                             continue
-                        if key in ["is_grass_var"]:
+                        if key in ["is_grass_var", "is_shiny_var", "ignore_encounter_check_var"]:
                             current[key].set(query[key])
                             continue
                         current[key].delete(0, tk.END)
@@ -151,6 +151,9 @@ def load_file():
                     if key in current.keys():
                         if key == "type":
                             current[key] = query[key]
+                            continue
+                        if key in ["is_shiny_var"]:
+                            current[key].set(query[key])
                             continue
                         current[key].delete(0, tk.END)
                         current[key].insert(0, query[key])
@@ -219,6 +222,12 @@ def add_method_j():
     variable3 = tk.BooleanVar(master)
     button3 = tk.Checkbutton(master, variable=variable3)
 
+    variable4 = tk.BooleanVar(master)
+    button4 = tk.Checkbutton(master, variable=variable4)
+
+    variable5 = tk.BooleanVar(master)
+    button5 = tk.Checkbutton(master, variable=variable5)
+
     entry16 = tk.Entry(master)
     entry16.insert(0, 20)
 
@@ -250,6 +259,10 @@ def add_method_j():
         "movement_rate": entry13,
         "is_grass": button3,
         "is_grass_var": variable3,
+        "ignore_encounter_check": button4,
+        "ignore_encounter_check_var": variable4,
+        "is_shiny": button5,
+        "is_shiny_var": variable5,
         "min_level_surf": entry16,
         "max_level_surf": entry19,
         "min_avail_level_surf": entry17,
@@ -283,6 +296,9 @@ def add_method_1():
     entry9 = tk.Entry(master)
     entry9.insert(0, 0)
 
+    variable = tk.BooleanVar(master)
+    button = tk.Checkbutton(master, variable=variable)
+
     entry10 = tk.Entry(master)
     entry10.insert(0, 1000)
 
@@ -298,6 +314,8 @@ def add_method_1():
         "min_ivs": entry5,
         "max_ivs": entry6,
         "ability": entry9,
+        "is_shiny": button,
+        "is_shiny_var": variable,
         "min_frame": entry10,
         "max_frame": entry11
     }
@@ -343,7 +361,7 @@ def verify_pkrs(seed_engine, pkrs):
 
     good = False
     for frame in range(min_frame, max_frame + 1):
-        if seed_engine.has_pokerus(frame):
+        if seed_engine.call(frame) in ["4000", "8000", "c000"]:
             if not good:
                 good = []
             good.append(frame)
@@ -410,6 +428,8 @@ def verify_method_1(seed_engine, method_1):
         except Exception as e:
             raise ValueError(f"Bad ability: {e}")
 
+    is_shiny = method_1["is_shiny_var"]
+
     good = False
     for frame in range(min_frame, max_frame + 1):
         poke = seed_engine.get_method_one_pokemon(frame)
@@ -440,6 +460,9 @@ def verify_method_1(seed_engine, method_1):
                 continue
 
         if ability is not None and ability != int(poke.ability):
+            continue
+
+        if is_shiny and not poke.is_shiny():
             continue
 
         if not good:
@@ -566,6 +589,8 @@ def verify_method_j(seed_engine, method_j):
             return
 
     is_grass = method_j["is_grass_var"]
+    ignore_encounter_check = method_j["ignore_encounter_check_var"]
+    is_shiny = method_j["is_shiny_var"]
 
     good = False
 
@@ -606,7 +631,10 @@ def verify_method_j(seed_engine, method_j):
             if enc_slots is not None and int(slot) not in enc_slots:
                 continue
 
-            if not seed_engine.has_encounter(frame, enc_rate, movement_rate):
+            if is_shiny and not poke.is_shiny():
+                continue
+
+            if not ignore_encounter_check and not seed_engine.has_encounter(frame, enc_rate, movement_rate):
                 continue
 
             if natures is not None and poke.nature not in natures:
@@ -813,7 +841,8 @@ def search_details(details):
 
             with open(log_file_name, 'a+') as outfile:
                 f = csv.writer(outfile, lineterminator='\n')
-                f.writerow([seed_engine.get_initial_seed()])
+                to_print_string = '"' + seed_engine.get_initial_seed() + '"'
+                f.writerow([to_print_string])
                 f.writerow([str(frames)])
 
             del seed_engine

@@ -2,7 +2,7 @@ import math
 
 
 class Pokemon:
-    def __init__(self, frame, pid, ability, ivs, nature, gender_determinator, occid, gives_pokerus, item_determinator):
+    def __init__(self, frame, pid, ability, ivs, nature, gender_determinator, occid, item_determinator, shiny=False):
         self.frame = frame
         self.pid = pid
         self.ability = ability
@@ -16,8 +16,11 @@ class Pokemon:
         self.nature = nature
         self.gender_determinator = gender_determinator
         self.occid = occid
-        self.gives_pokerus = gives_pokerus
         self.item_determinator = item_determinator
+        self.shiny = shiny
+
+    def is_shiny(self):
+        return self.shiny
 
     def get_is_female(self, threshold: int) -> bool:
         if threshold not in [12.5, 25, 50, 75]:
@@ -34,7 +37,7 @@ class Pokemon:
 
     def print(self) -> None:
         print(f"Frame: {self.frame} PID: {self.pid.upper()} ({self.ability}) Occid {self.occid} {self.nature} "
-              f"{self.ivs} {self.get_hidden_power()} ITEM {self.item_determinator} PKRS? {self.gives_pokerus}")
+              f"{self.ivs} {self.get_hidden_power()} ITEM {self.item_determinator}")
         return
 
     def get_hidden_power(self) -> (str, int):
