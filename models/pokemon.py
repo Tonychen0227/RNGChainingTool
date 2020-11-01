@@ -2,7 +2,7 @@ import math
 
 
 class Pokemon:
-    def __init__(self, frame, pid, ability, ivs, nature, gender_determinator, occid, item_determinator, shiny=False):
+    def __init__(self, frame, pid, ability, ivs, nature, gender_determinator, occid, item_determinator):
         self.frame = frame
         self.pid = pid
         self.ability = ability
@@ -17,10 +17,6 @@ class Pokemon:
         self.gender_determinator = gender_determinator
         self.occid = occid
         self.item_determinator = item_determinator
-        self.shiny = shiny
-
-    def is_shiny(self):
-        return self.shiny
 
     def get_is_female(self, threshold: int) -> bool:
         if threshold not in [12.5, 25, 50, 75]:

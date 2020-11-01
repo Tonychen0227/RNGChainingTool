@@ -13,7 +13,7 @@ def get_natures_list():
 
 
 class PearlPlatSeedEngine:
-    def __init__(self, month, day, hour, minute, second, delay, populate=True):
+    def __init__(self, month, day, hour, minute, second, delay):
         ab = month * day + minute + second
         ab = hex(ab & 0xff)[2:]
 
@@ -34,65 +34,85 @@ class PearlPlatSeedEngine:
 
         self.initial_seed = ab + cd + efgh
 
-        self.frames = [0] * 20000
+        self.populated_frames = False
+        self.populated_tid_sid = False
 
-        if populate:
-            self.frames[0] = int(self.initial_seed, 16)
-            for x in range(1, 20000):
-                self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
-
+        self.frames = None
         self.cached_method_1 = {}
 
-        self.tid, self.sid = self.get_tid_sid()
+        self.sid = -1
+        self.tid = -1
+
+        self.max_frames = -1
+
+    def populate(self, frames):
+        if self.populated_frames:
+            return
+
+        frames += 500
+
+        self.max_frames = frames
+
+        self.frames = [0] * frames
+
+        self.frames[0] = int(self.initial_seed, 16)
+        for x in range(1, len(self.frames)):
+            self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
+
+        self.populated_frames = True
 
     def get_tid_sid(self):
-        # MTFast(u32 seed, u32 advances=0)
-        mt = [0] * 400
+        if not self.populated_tid_sid:
+            # MTFast(u32 seed, u32 advances=0)
+            mt = [0] * 400
 
-        seed = int(self.initial_seed.lower(), 16)
+            seed = int(self.initial_seed.lower(), 16)
 
-        mt[0] = seed
+            mt[0] = seed
 
-        bits_32 = 1 << 32
+            bits_32 = 1 << 32
 
-        for index in range(1, 399):
-            seed = (0x6c078965 * (seed ^ (seed >> 30)) + index) & (bits_32 - 1)
-            mt[index] = seed
+            for index in range(1, 399):
+                seed = (0x6c078965 * (seed ^ (seed >> 30)) + index) & (bits_32 - 1)
+                mt[index] = seed
 
-        # Shuffle
-        for i in range(0, 2):
-            m0 = mt[i]
-            m1 = mt[i + 1]
+            # Shuffle
+            for i in range(0, 2):
+                m0 = mt[i]
+                m1 = mt[i + 1]
 
-            y = (m0 & 0x80000000) | (m1 & 0x7fffffff)
+                y = (m0 & 0x80000000) | (m1 & 0x7fffffff)
 
-            y1 = y >> 1
+                y1 = y >> 1
 
-            if y & 1:
-                y1 ^= 0x9908b0df
-                y1 = y1
+                if y & 1:
+                    y1 ^= 0x9908b0df
+                    y1 = y1
 
-            mt[i] = y1 ^ mt[i + 397]
+                mt[i] = y1 ^ mt[i + 397]
 
-        y = mt[1]
-        y ^= (y >> 11)
-        y ^= ((y << 7) & 0x9d2c5680)
-        y ^= ((y << 15) & 0xefc60000)
-        y ^= (y >> 18)
+            y = mt[1]
+            y ^= (y >> 11)
+            y ^= ((y << 7) & 0x9d2c5680)
+            y ^= ((y << 15) & 0xefc60000)
+            y ^= (y >> 18)
 
-        tid = y & 0xFFFF
-        sid = y >> 16
+            tid = y & 0xFFFF
+            sid = y >> 16
 
-        del mt
+            del mt
 
-        return tid, sid
+            self.tid = tid
+            self.sid = sid
+
+        return self.tid, self.sid
 
     def get_initial_seed(self):
         return self.initial_seed.upper()
 
     def get(self, frame):
-        if frame >= 20000:
-            raise ValueError("You cannot ask for a frame larger than 20000")
+        if frame >= self.max_frames:
+            raise ValueError(f"You cannot ask for a frame larger than {self.max_frames}")
         elif frame < 0:
             raise ValueError("You cannot ask for a frame smaller than 0")
         return self.frames[frame]
@@ -127,6 +147,15 @@ class PearlPlatSeedEngine:
             return True
         else:
             return False
+
+    def is_shiny(self, pokemon: Pokemon) -> bool:
+        if not self.populated_tid_sid:
+            self.get_tid_sid()
+
+        top_call = int(pokemon.pid[:4].lower(), 16)
+        bottom_call = int(pokemon.pid[4:].lower(), 16)
+
+        return self.tid ^ self.sid ^ top_call ^ bottom_call < 8
 
     def get_method_one_pokemon(self, frame) -> Pokemon:
         if frame in self.cached_method_1:
@@ -166,9 +195,7 @@ class PearlPlatSeedEngine:
 
         determinator = int(pid[-2:], 16)
 
-        is_shiny = self.tid ^ self.sid ^ int(second_call, 16) ^ int(first_call, 16)
-
-        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, 0, is_shiny < 8)
+        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, 0)
 
         self.cached_method_1[frame] = new_pokemon
 
@@ -252,7 +279,5 @@ class PearlPlatSeedEngine:
 
         occid_item = occid + 4
 
-        is_shiny = self.tid ^ self.sid ^ int(self.call(call_2), 16) ^ int(self.call(call_1), 16)
-
         return Pokemon(frame, pid, ability, ivs, nature, item_determinator, occid,
-                       int(self.call(occid_item), 16) % 100, is_shiny < 8), slot
+                       int(self.call(occid_item), 16) % 100), slot

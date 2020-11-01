@@ -462,7 +462,7 @@ def verify_method_1(seed_engine, method_1):
         if ability is not None and ability != int(poke.ability):
             continue
 
-        if is_shiny and not poke.is_shiny():
+        if is_shiny and not seed_engine.is_shiny(poke):
             continue
 
         if not good:
@@ -631,7 +631,7 @@ def verify_method_j(seed_engine, method_j):
             if enc_slots is not None and int(slot) not in enc_slots:
                 continue
 
-            if is_shiny and not poke.is_shiny():
+            if is_shiny and not seed_engine.is_shiny(poke):
                 continue
 
             if not ignore_encounter_check and not seed_engine.has_encounter(frame, enc_rate, movement_rate):
@@ -795,11 +795,17 @@ def search_details(details):
 
     total_combinations = len(combinations)
 
+    inner_queries = [x for x in details["queries"]]
+
+    max_frames = max([int(y["max_frame"]) for y in inner_queries])
+
     for combination in combinations:
         checked += 1
 
         seed_engine = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
                                           combination[4], combination[5])
+
+        seed_engine.populate(max_frames)
 
         if checked % 100 == 0:
             current_time = datetime.datetime.now()
@@ -853,15 +859,16 @@ def search_details(details):
                 f.writerow([f"Seed {seed_engine.get_initial_seed()} (Year 2000) (on {combination[0]}/{combination[1]} "
                             f"at {combination[2]}:{combination[3]}:{combination[4]} Delay {combination[5]})"])
                 four_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                 combination[4], combination[5] - 4, False)
+                                                 combination[4], combination[5] - 4)
                 two_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                combination[4], combination[5] - 2, False)
+                                                combination[4], combination[5] - 2)
                 two_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                               combination[4], combination[5] + 2, False)
+                                               combination[4], combination[5] + 2)
                 four_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                combination[4], combination[5] + 4, False)
-                f.writerow([f"SIDs: -4: {four_early.tid} -2: {two_early.tid} 0: {seed_engine.tid} "
-                            f"+2: {two_late.tid} +4: {four_late.tid}"])
+                                                combination[4], combination[5] + 4)
+                f.writerow([f"SIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
+                            f"0: {seed_engine.get_tid_sid()[0]} "
+                            f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
                 f.writerow([str(frames)])
 
                 del four_early, two_early, two_late, four_late

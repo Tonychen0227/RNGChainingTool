@@ -4,11 +4,11 @@ from pearl_plat_seed import PearlPlatSeedEngine
 class Test:
     def __init__(self):
         seed_engine = PearlPlatSeedEngine(7, 1, 18, 32, 46, 5719)  # DemoPlat
+        seed_engine.populate(20000)
 
         assert seed_engine.initial_seed == "55121657"
 
-        assert seed_engine.tid == 1218
-        assert seed_engine.sid == 16914
+        assert 1218, 16914 == seed_engine.get_tid_sid()
 
         # region methodJ No Synchronize 1
 
@@ -81,7 +81,7 @@ class Test:
 
         assert poke.get_hidden_power() == ("Bug", 68)
 
-        assert poke.is_shiny()
+        assert seed_engine.is_shiny(poke)
         # endregion
 
         # region MethodJ Synchronize success
