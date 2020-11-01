@@ -24,8 +24,9 @@ Note: Seeds are 0 indexed. What this means is that "603" in the report actually 
   * Leave a field blank if you don't care about the result
   * Label has no functional use, with the exception of when you are going to use Synchronize.
   * Separate lists by `/` (e.g. you can query for natures `Jolly/Adamant/Brave`)
+  * It is ok for fields such as `hour`, `minute`, `secs` to have the minimum be lower than the maximum. It will "wrap" when generating seeds. E.g. 18-4 hour would generate 18, 19, 20, 21 ... 23, 0, 1, 2, 3, 4 hours
 * Method 1 - Stationary Encounters
-  * Input the RNG frame you want to encounter this, along with other parameters you would like.
+  * Input the RNG frame you want to encounter this mon, along with other parameters you would like.
   * All fields are optional, except `min_frame` and `max_frame`
   * Can leave a field blank if you do not want it to be queried
 * Method J - Wild Encounters
@@ -38,6 +39,7 @@ Note: Seeds are 0 indexed. What this means is that "603" in the report actually 
     * e.g. To use MethodJ encounter named "Abra" has ability "Synchronize" as your synchronize lead, the synchronize label must be "Abra"
     * it is also possible to give a list of natures such as "Adamant/Modest" or just Adamant
       * You MAY NOT mix natures and labels. If any of the arguments can be parsed as a nature, it will only see them as natures not labels.
+  * Returned frames are verified to have an encounter. However, the `ignore_encounter` checkbox allows you to bypass this check.
 * PKRS (Pokerus)
   * Input the RNG frame range you want to have Pokerus. Script returns if any of the frame Primary RNG calls are "4000", "8000" or "C000" (TY werster)
   

@@ -700,32 +700,17 @@ def search_details(details):
     min_delay_internal = try_get("Mindelay", details, int)
     max_delay_internal = try_get("Maxdelay", details, int)
 
-    if min_month_internal > max_month_internal:
-        raise ValueError("Min month larger than max month")
-
     if min_month_internal < 1 or max_month_internal > 12:
         raise ValueError("Month must be in between 1, 12")
-
-    if min_day_internal > max_day_internal:
-        raise ValueError("Min day larger than max day")
 
     if min_day_internal < 1 or max_day_internal > 31:
         raise ValueError("Day must be in between 1, 31")
 
-    if min_hour_internal > max_hour_internal:
-        raise ValueError("Min hour larger than max hour")
-
     if min_hour_internal < 0 or max_hour_internal > 23:
         raise ValueError("Hour must be in between 0, 23")
 
-    if min_mins_internal > max_mins_internal:
-        raise ValueError("Min mins larger than max mins")
-
     if min_mins_internal < 0 or max_mins_internal > 59:
         raise ValueError("Mins must be in between 0, 59")
-
-    if min_secs_internal > max_secs_internal:
-        raise ValueError("Min secs larger than max secs")
 
     if min_secs_internal < 0 or max_secs_internal > 59:
         raise ValueError("Secs must be in between 0, 59")
@@ -739,34 +724,58 @@ def search_details(details):
     values = []
     ab_combinations = []
 
-    for month in range(min_month_internal, max_month_internal + 1):
-        if month in [1, 3, 5, 7, 8, 10, 12]:
-            if max_day_internal > 31:
-                max_day_internal = 31
-        elif month == 2:
-            if max_day_internal > 28:
-                max_day_internal = 28
-        else:
-            if max_day_internal > 30:
-                max_day_internal = 30
+    if min_month_internal > max_month_internal:
+        months = [x for x in range(min_month_internal, 13)] + [x for x in range(1, max_month_internal + 1)]
+    else:
+        months = [x for x in range(min_month_internal, max_month_internal + 1)]
 
-        for day in range(min_day_internal, max_day_internal + 1):
-            for minute in range(min_mins_internal, max_mins_internal + 1):
-                for secs in range(min_secs_internal, max_secs_internal + 1):
-                    ab = month * day + minute + secs
+    if min_day_internal > max_day_internal:
+        days = [x for x in range(min_day_internal, 32)] + [x for x in range(1, max_day_internal + 1)]
+    else:
+        days = [x for x in range(min_day_internal, max_day_internal + 1)]
+
+    if min_hour_internal > max_hour_internal:
+        hours = [x for x in range(min_hour_internal, 24)] + [x for x in range(1, max_hour_internal + 1)]
+    else:
+        hours = [x for x in range(min_hour_internal, max_hour_internal + 1)]
+
+    if min_mins_internal > max_mins_internal:
+        mins = [x for x in range(min_mins_internal, 60)] + [x for x in range(1, max_mins_internal + 1)]
+    else:
+        mins = [x for x in range(min_mins_internal, max_mins_internal + 1)]
+
+    if min_secs_internal > max_secs_internal:
+        secs = [x for x in range(min_secs_internal, 60)] + [x for x in range(1, max_secs_internal + 1)]
+    else:
+        secs = [x for x in range(min_secs_internal, max_secs_internal + 1)]
+
+    for month in months:
+        for day in days:
+            if month in [1, 3, 5, 7, 8, 10, 12]:
+                if day > 31:
+                    continue
+            elif month == 2:
+                if day > 28:
+                    continue
+            else:
+                if day > 30:
+                    continue
+            for minute in mins:
+                for sec in secs:
+                    ab = month * day + minute + sec
                     ab = hex(ab & 0xff)[2:]
 
                     while len(ab) < 2:
                         ab = "0" + ab
 
                     if ab not in values:
-                        ab_combinations.append([month, day, minute, secs])
+                        ab_combinations.append([month, day, minute, sec])
                         values.append(ab)
 
     combinations = []
 
     for ab_combination in ab_combinations:
-        for hour in range(min_hour_internal, max_hour_internal + 1):
+        for hour in hours:
             for delay in range(min_delay_internal, max_delay_internal + 1):
                 combinations.append([ab_combination[0], ab_combination[1], hour, ab_combination[2],
                                      ab_combination[3], delay])
