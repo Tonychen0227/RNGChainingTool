@@ -850,8 +850,8 @@ def search_details(details):
 
             with open(log_file_name, 'a+') as outfile:
                 f = csv.writer(outfile, lineterminator='\n')
-                f.writerow([f"Seed {seed_engine.get_initial_seed()} with parameters "
-                            f"(month/day/hour/min/sec/delay) at Year 2000 {combinations}"])
+                f.writerow([f"Seed {seed_engine.get_initial_seed()} (Year 2000) (on {combination[0]}/{combination[1]} "
+                            f"at {combination[2]}:{combination[3]}:{combination[4]} Delay {combination[5]})"])
                 four_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
                                                  combination[4], combination[5] - 4, False)
                 two_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
