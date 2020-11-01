@@ -850,9 +850,21 @@ def search_details(details):
 
             with open(log_file_name, 'a+') as outfile:
                 f = csv.writer(outfile, lineterminator='\n')
-                to_print_string = '"' + seed_engine.get_initial_seed() + '"'
-                f.writerow([to_print_string])
+                f.writerow([f"Seed {seed_engine.get_initial_seed()} with parameters "
+                            f"(month/day/hour/min/sec/delay) at Year 2000 {combinations}"])
+                four_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                                 combination[4], combination[5] - 4, False)
+                two_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                                combination[4], combination[5] - 2, False)
+                two_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                               combination[4], combination[5] + 2, False)
+                four_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                                combination[4], combination[5] + 4, False)
+                f.writerow([f"SIDs: -4: {four_early.tid} -2: {two_early.tid} 0: {seed_engine.tid} "
+                            f"+2: {two_late.tid} +4: {four_late.tid}"])
                 f.writerow([str(frames)])
+
+                del four_early, two_early, two_late, four_late
 
             del seed_engine
 

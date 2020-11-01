@@ -7,8 +7,8 @@ class Test:
 
         assert seed_engine.initial_seed == "55121657"
 
-        # assert seed_engine.tid == 1218
-        # assert seed_engine.sid == 16914
+        assert seed_engine.tid == 1218
+        assert seed_engine.sid == 16914
 
         # region methodJ No Synchronize 1
 
@@ -81,7 +81,7 @@ class Test:
 
         assert poke.get_hidden_power() == ("Bug", 68)
 
-        # assert poke.is_shiny()
+        assert poke.is_shiny()
         # endregion
 
         # region MethodJ Synchronize success

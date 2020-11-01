@@ -13,7 +13,7 @@ def get_natures_list():
 
 
 class PearlPlatSeedEngine:
-    def __init__(self, month, day, hour, minute, second, delay):
+    def __init__(self, month, day, hour, minute, second, delay, populate=True):
         ab = month * day + minute + second
         ab = hex(ab & 0xff)[2:]
 
@@ -35,16 +35,58 @@ class PearlPlatSeedEngine:
         self.initial_seed = ab + cd + efgh
 
         self.frames = [0] * 20000
-        self.frames[0] = int(self.initial_seed, 16)
-        for x in range(1, 20000):
-            self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
+
+        if populate:
+            self.frames[0] = int(self.initial_seed, 16)
+            for x in range(1, 20000):
+                self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
 
         self.cached_method_1 = {}
 
+        self.tid, self.sid = self.get_tid_sid()
+
+    def get_tid_sid(self):
+        # MTFast(u32 seed, u32 advances=0)
+        mt = [0] * 400
+
+        seed = int(self.initial_seed.lower(), 16)
+
+        mt[0] = seed
+
+        bits_32 = 1 << 32
+
+        for index in range(1, 399):
+            seed = (0x6c078965 * (seed ^ (seed >> 30)) + index) & (bits_32 - 1)
+            mt[index] = seed
+
+        # Shuffle
+        for i in range(0, 2):
+            m0 = mt[i]
+            m1 = mt[i + 1]
+
+            y = (m0 & 0x80000000) | (m1 & 0x7fffffff)
+
+            y1 = y >> 1
+
+            if y & 1:
+                y1 ^= 0x9908b0df
+                y1 = y1
+
+            mt[i] = y1 ^ mt[i + 397]
+
+        y = mt[1]
+        y ^= (y >> 11)
+        y ^= ((y << 7) & 0x9d2c5680)
+        y ^= ((y << 15) & 0xefc60000)
+        y ^= (y >> 18)
+
+        tid = y & 0xFFFF
+        sid = y >> 16
+
+        return tid, sid
 
     def get_initial_seed(self):
         return self.initial_seed.upper()
-
 
     def get(self, frame):
         if frame >= 20000:
@@ -122,7 +164,9 @@ class PearlPlatSeedEngine:
 
         determinator = int(pid[-2:], 16)
 
-        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, 0)
+        is_shiny = self.tid ^ self.sid ^ int(second_call, 16) ^ int(first_call, 16)
+
+        new_pokemon = Pokemon(frame, pid, ability, ivs, nature, determinator, frame + 4, 0, is_shiny < 8)
 
         self.cached_method_1[frame] = new_pokemon
 
@@ -206,4 +250,7 @@ class PearlPlatSeedEngine:
 
         occid_item = occid + 4
 
-        return Pokemon(frame, pid, ability, ivs, nature, item_determinator, occid, int(self.call(occid_item), 16) % 100), slot
+        is_shiny = self.tid ^ self.sid ^ int(self.call(call_2), 16) ^ int(self.call(call_1), 16)
+
+        return Pokemon(frame, pid, ability, ivs, nature, item_determinator, occid,
+                       int(self.call(occid_item), 16) % 100, is_shiny < 8), slot

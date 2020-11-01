@@ -25,6 +25,7 @@ Note: Seeds are 0 indexed. What this means is that "603" in the report actually 
   * Label has no functional use, with the exception of when you are going to use Synchronize.
   * Separate lists by `/` (e.g. you can query for natures `Jolly/Adamant/Brave`)
   * It is ok for fields such as `hour`, `minute`, `secs` to have the minimum be lower than the maximum. It will "wrap" when generating seeds. E.g. 18-4 hour would generate 18, 19, 20, 21 ... 23, 0, 1, 2, 3, 4 hours
+  * If is_shiny is unchecked, it will include both shiny and non shiny!
 * Method 1 - Stationary Encounters
   * Input the RNG frame you want to encounter this mon, along with other parameters you would like.
   * All fields are optional, except `min_frame` and `max_frame`
