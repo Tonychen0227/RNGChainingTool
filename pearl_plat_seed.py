@@ -83,6 +83,8 @@ class PearlPlatSeedEngine:
         tid = y & 0xFFFF
         sid = y >> 16
 
+        del mt
+
         return tid, sid
 
     def get_initial_seed(self):
