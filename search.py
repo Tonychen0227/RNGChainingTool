@@ -1,7 +1,6 @@
 import csv
 import random
 import datetime
-from typing import List
 
 from models.queries import PKRS, Method1, MethodJ, VerifiableQuery
 from pearl_plat_seed import PearlPlatSeedEngine, get_natures_list

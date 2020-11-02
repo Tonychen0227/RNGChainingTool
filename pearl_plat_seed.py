@@ -12,6 +12,14 @@ def get_natures_list():
     return natures
 
 
+summations = []
+current = 1
+summations.append(1)
+for x in range(1, 100):
+    current += (0x41c64e6d ** x & 0xFFFFFFFF)
+    summations.append(current & 0xFFFFFFFF)
+
+
 class PearlPlatSeedEngine:
     def __init__(self, month, day, hour, minute, second, delay):
         ab = month * day + minute + second
@@ -37,7 +45,6 @@ class PearlPlatSeedEngine:
         self.populated_frames = False
         self.populated_tid_sid = False
 
-        self.frames = None
         self.cached_method_1 = {}
 
         self.sid = -1
@@ -45,19 +52,27 @@ class PearlPlatSeedEngine:
 
         self.max_frames = -1
 
+        self.benchmarks = []
+
+        self.benchmarks.append(int(self.initial_seed.lower(), 16))
+
+    def calc_from_initial(self, first_value, frame):
+        temp = (first_value * (0x41c64e6d ** frame)) & 0xFFFFFFFF
+        addition = 0
+        if frame >= 1:
+            addition = 0x6073 * summations[frame - 1]
+        return (temp + addition) & 0xFFFFFFFF
+
     def populate(self, frames):
         if self.populated_frames:
             return
 
         frames += 1500
 
+        for k in range(1, frames // 10):
+            self.benchmarks.append(self.calc_from_initial(self.benchmarks[k-1], 10) & 0xFFFFFFFF)
+
         self.max_frames = frames
-
-        self.frames = [0] * frames
-
-        self.frames[0] = int(self.initial_seed, 16)
-        for x in range(1, len(self.frames)):
-            self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
 
         self.populated_frames = True
 
@@ -115,7 +130,7 @@ class PearlPlatSeedEngine:
             raise ValueError(f"You cannot ask for a frame larger than {self.max_frames}")
         elif frame < 0:
             raise ValueError("You cannot ask for a frame smaller than 0")
-        return self.frames[frame]
+        return self.calc_from_initial(self.benchmarks[frame // 10], frame % 10) & 0xFFFFFFFF
 
     def call(self, frame: int) -> str:
         value = str(hex((self.get(frame) * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF))[2:][:-4]
