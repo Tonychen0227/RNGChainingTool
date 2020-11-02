@@ -1,7 +1,9 @@
 import csv
 import random
 import datetime
+from typing import List
 
+from models.queries import PKRS, Method1, MethodJ, VerifiableQuery
 from pearl_plat_seed import PearlPlatSeedEngine, get_natures_list
 
 
@@ -10,6 +12,173 @@ def try_get(key, details, type_to_cast):
         return type_to_cast(details[key])
     except Exception as e:
         raise ValueError(f"No valid argument for field {key} with error {e}")
+
+
+def validate_and_transform_query(query) -> VerifiableQuery:
+    min_frame = try_get("min_frame", query, int)
+    max_frame = try_get("max_frame", query, int)
+    if min_frame > max_frame:
+        raise ValueError("Min frame must be lower or equal")
+
+    if min_frame < 0 or max_frame > 15000:
+        raise ValueError("Frames must be between 0 and 15k")
+
+    if query["type"] == "PKRS":
+        ret = PKRS()
+        ret.min_frame = min_frame
+        ret.max_frame = max_frame
+        return ret
+
+    label = query["label"]
+
+    natures = None
+    if "natures" in query.keys() and query["natures"].strip() != "":
+        natures = query["natures"].strip().split("/")
+
+    hidden_power_types = None
+    if "hidden_power_types" in query.keys() and query["hidden_power_types"].strip() != "":
+        hidden_power_types = query["hidden_power_types"].strip().split("/")
+
+    min_hidden_power = None
+    if "min_hidden_power" in query.keys() and query["min_hidden_power"].strip() != "":
+        try:
+            min_hidden_power = int(query["min_hidden_power"])
+            if min_hidden_power < 0 or min_hidden_power > 70:
+                raise ValueError("Min hidden power value must be within 0 and 70")
+        except Exception as e:
+            raise ValueError(f"Bad hidden power power: {e}")
+
+    min_ivs = None
+    if "min_ivs" in query.keys() and query["min_ivs"].strip() != "":
+        try:
+            min_ivs = []
+            for x in query["min_ivs"].strip().split("/"):
+                x = int(x)
+                if x < 0 or x > 31:
+                    raise ValueError("IV value must be within 0 and 31")
+                min_ivs.append(int(x))
+        except Exception as e:
+            raise ValueError(f"Bad IV: {e}")
+
+    max_ivs = None
+    if "max_ivs" in query.keys() and query["max_ivs"].strip() != "":
+        try:
+            max_ivs = []
+            for x in query["max_ivs"].strip().split("/"):
+                x = int(x)
+                if x < 0 or x > 31:
+                    raise ValueError("IV value must be within 0 and 31")
+                max_ivs.append(int(x))
+        except Exception as e:
+            raise ValueError(f"Bad IV: {e}")
+
+    ability = None
+    if "ability" in query.keys() and query["ability"].strip() != "":
+        try:
+            ability = int(query["ability"])
+            if ability not in [0, 1]:
+                raise ValueError("Ability value must be 0 or 1")
+        except Exception as e:
+            raise ValueError(f"Bad ability: {e}")
+
+    is_shiny = query["is_shiny_var"]
+
+    if query["type"] == "Method1":
+        ret = Method1()
+        ret.min_frame = min_frame
+        ret.max_frame = max_frame
+        ret.natures = natures
+        ret.hidden_power_types = hidden_power_types
+        ret.min_hidden_power = min_hidden_power
+        ret.min_ivs = min_ivs
+        ret.max_ivs = max_ivs
+        ret.ability = ability
+        ret.is_shiny = is_shiny
+        ret.label = label
+        return ret
+
+    enc_slots = None
+    if "enc_slots" in query.keys() and query["enc_slots"].strip() != "":
+        try:
+            enc_slots = []
+            for x in query["enc_slots"].strip().split("/"):
+                x = int(x)
+                if x < 0 or x > 11:
+                    raise ValueError("Enc slot value must be within 0 and 11")
+                enc_slots.append(int(x))
+        except Exception as e:
+            raise ValueError(f"Bad enc slot: {e}")
+
+    min_item_deter = None
+    if "min_item_deter" in query.keys() and query["min_item_deter"].strip() != "":
+        try:
+            min_item_deter = int(query["min_item_deter"])
+            if min_item_deter < 0 or min_item_deter > 100:
+                raise ValueError("Min item determinant value must be within 0 and 70")
+        except Exception as e:
+            raise ValueError(f"Bad min item determinant: {e}")
+
+    max_item_deter = None
+    if "max_item_deter" in query.keys() and query["max_item_deter"].strip() != "":
+        try:
+            max_item_deter = int(query["max_item_deter"])
+            if max_item_deter < 0 or max_item_deter > 100:
+                raise ValueError("Max item determinant value must be within 0 and 70")
+        except Exception as e:
+            raise ValueError(f"Bad max item determinant: {e}")
+
+    enc_rate = try_get("enc_rate", query, int)
+
+    movement_rate = try_get("movement_rate", query, int)
+
+    is_surfing = not query["is_grass_var"]
+
+    min_level_surf = 0
+    max_level_surf = 0
+    min_avail_level_surf = 0
+    max_avail_level_surf = 0
+    if is_surfing:
+        min_level_surf = int(query["min_level_surf"])
+        max_level_surf = int(query["max_level_surf"])
+        min_avail_level_surf = int(query["min_avail_level_surf"])
+        max_avail_level_surf = int(query["max_avail_level_surf"])
+        if min_level_surf < min_avail_level_surf:
+            raise ValueError("Min surfing level below minimum")
+        if max_level_surf < min_level_surf:
+            raise ValueError("Max surfing level below min")
+        if max_level_surf > max_avail_level_surf:
+            raise ValueError("Max surfing level above maximum")
+
+    ignore_encounter_check = query["ignore_encounter_check_var"]
+
+    synchronize_target = query["synchronize_target"]
+    synchronize_natures = [None]
+
+    ret = MethodJ()
+    ret.min_frame = min_frame
+    ret.max_frame = max_frame
+    ret.natures = natures
+    ret.hidden_power_types = hidden_power_types
+    ret.min_hidden_power = min_hidden_power
+    ret.min_ivs = min_ivs
+    ret.max_ivs = max_ivs
+    ret.ability = ability
+    ret.is_shiny = is_shiny
+    ret.enc_slots = enc_slots
+    ret.min_item_deter = min_item_deter
+    ret.max_item_deter = max_item_deter
+    ret.enc_rate = enc_rate
+    ret.movement_rate = movement_rate
+    ret.is_surfing = is_surfing
+    ret.min_level_surf = min_level_surf
+    ret.max_level_surf = max_level_surf
+    ret.min_avail_level_surf = min_avail_level_surf
+    ret.max_avail_level_surf = max_avail_level_surf
+    ret.ignore_encounter_check = ignore_encounter_check
+    ret.synchronize_target = synchronize_target
+    ret.synchronize_natures = synchronize_natures
+    ret.label = label
+    return ret
 
 
 def search_details(details):
@@ -125,6 +294,13 @@ def search_details(details):
 
     max_frames = max([int(y["max_frame"]) for y in inner_queries])
 
+    fixed_queries = []
+
+    for inner_query in inner_queries:
+        fixed_queries.append(validate_and_transform_query(inner_query))
+
+    del inner_queries
+
     for combination in combinations:
         checked += 1
 
@@ -143,42 +319,20 @@ def search_details(details):
 
         try:
             frames = {}
-            for query in details["queries"]:
-                if query["type"] == "MethodJ":
-                    verify_result = verify_method_j(seed_engine, query, details["queries"])
-                    if not verify_result:
-                        raise WindowsError("")
-                    else:
-                        if "MethodJ" in frames.keys():
-                            temp = frames["MethodJ"]
-                            temp.append(verify_result)
-                            frames["MethodJ"] = temp
-                        else:
-                            frames["MethodJ"] = [verify_result]
-
-                if query["type"] == "Method1":
-                    verify_result = verify_method_1(seed_engine, query)
-                    if not verify_result:
-                        raise WindowsError("")
-                    else:
-                        if "Method1" in frames.keys():
-                            temp = frames["Method1"]
-                            temp.append(verify_result)
-                            frames["Method1"] = temp
-                        else:
-                            frames["Method1"] = [verify_result]
-
-                if query["type"] == "PKRS":
-                    verify_result = verify_pkrs(seed_engine, query)
-                    if not verify_result:
-                        raise WindowsError("")
-                    else:
-                        if "PKRS" in frames.keys():
-                            temp = frames["PKRS"]
-                            temp.append(verify_result)
-                            frames["PKRS"] = temp
-                        else:
-                            frames["PKRS"] = [verify_result]
+            for query in fixed_queries:
+                if isinstance(query, MethodJ):
+                    query.synchronize_natures = [None]
+                    populate_synchronize(seed_engine, query, fixed_queries)
+                verify_result = query.verify_frames(seed_engine)
+                if not verify_result:
+                    raise WindowsError("")
+                class_name = query.__class__.__name__
+                if class_name in frames.keys():
+                    temp = frames[class_name]
+                    temp.append(verify_result)
+                    frames[class_name] = temp
+                else:
+                    frames[class_name] = [verify_result]
 
             with open(log_file_name, 'a+') as outfile:
                 f = csv.writer(outfile, lineterminator='\n')
@@ -206,329 +360,21 @@ def search_details(details):
             continue
 
 
-def verify_pkrs(seed_engine, pkrs):
-    min_frame = try_get("min_frame", pkrs, int)
-    max_frame = try_get("max_frame", pkrs, int)
-    if min_frame > max_frame:
-        raise ValueError("Min frame must be lower or equal")
-
-    if min_frame < 0 or max_frame > 15000:
-        raise ValueError("Frames must be between 0 and 15k")
-
-    good = False
-    for frame in range(min_frame, max_frame + 1):
-        if seed_engine.call(frame) in ["4000", "8000", "c000"]:
-            if not good:
-                good = []
-            good.append(frame)
-
-    return good
-
-
-def verify_method_1(seed_engine, method_1):
-    min_frame = try_get("min_frame", method_1, int)
-    max_frame = try_get("max_frame", method_1, int)
-    if min_frame > max_frame:
-        raise ValueError("Min frame must be lower or equal")
-
-    if min_frame < 0 or max_frame > 15000:
-        raise ValueError("Frames must be between 0 and 15k")
-
-    natures = None
-    if "natures" in method_1.keys() and method_1["natures"].strip() != "":
-        natures = method_1["natures"].strip().split("/")
-
-    hidden_power_types = None
-    if "hidden_power_types" in method_1.keys() and method_1["hidden_power_types"].strip() != "":
-        hidden_power_types = method_1["hidden_power_types"].strip().split("/")
-
-    min_hidden_power = None
-    if "min_hidden_power" in method_1.keys() and method_1["min_hidden_power"].strip() != "":
-        try:
-            min_hidden_power = int(method_1["min_hidden_power"])
-            if min_hidden_power < 0 or min_hidden_power > 70:
-                raise ValueError("Min hidden power value must be within 0 and 70")
-        except Exception as e:
-            raise ValueError(f"Bad hidden power power: {e}")
-
-    min_ivs = None
-    if "min_ivs" in method_1.keys() and method_1["min_ivs"].strip() != "":
-        try:
-            min_ivs = []
-            for x in method_1["min_ivs"].strip().split("/"):
-                x = int(x)
-                if x < 0 or x > 31:
-                    raise ValueError("IV value must be within 0 and 31")
-                min_ivs.append(int(x))
-        except Exception as e:
-            raise ValueError(f"Bad IV: {e}")
-
-    max_ivs = None
-    if "max_ivs" in method_1.keys() and method_1["max_ivs"].strip() != "":
-        try:
-            max_ivs = []
-            for x in method_1["max_ivs"].strip().split("/"):
-                x = int(x)
-                if x < 0 or x > 31:
-                    raise ValueError("IV value must be within 0 and 31")
-                max_ivs.append(int(x))
-        except Exception as e:
-            raise ValueError(f"Bad IV: {e}")
-
-    ability = None
-    if "ability" in method_1.keys() and method_1["ability"].strip() != "":
-        try:
-            ability = int(method_1["ability"])
-            if ability not in [0, 1]:
-                raise ValueError("Ability value must be 0 or 1")
-        except Exception as e:
-            raise ValueError(f"Bad ability: {e}")
-
-    is_shiny = method_1["is_shiny_var"]
-
-    good = False
-    for frame in range(min_frame, max_frame + 1):
-        poke = seed_engine.get_method_one_pokemon(frame)
-
-        if natures is not None and poke.nature not in natures:
-            continue
-
-        hidden_power = poke.get_hidden_power()
-
-        if hidden_power_types is not None and hidden_power[0] not in hidden_power_types:
-            continue
-
-        if hidden_power_types is not None and min_hidden_power > int(hidden_power[1]):
-            continue
-
-        poke_ivs = poke.ivs
-
-        if min_ivs is not None:
-            low_ivs = [int(a) - b for a, b in zip(poke_ivs, min_ivs)]
-
-            if min(low_ivs) < 0:
-                continue
-
-        if max_ivs is not None:
-            high_ivs = [b - int(a) for a, b in zip(poke_ivs, max_ivs)]
-
-            if min(high_ivs) < 0:
-                continue
-
-        if ability is not None and ability != int(poke.ability):
-            continue
-
-        if is_shiny and not seed_engine.is_shiny(poke):
-            continue
-
-        if not good:
-            good = []
-        good.append(frame)
-
-    return good
-
-
-def verify_method_j(seed_engine, method_j, all_queries):
-    min_frame = try_get("min_frame", method_j, int)
-    max_frame = try_get("max_frame", method_j, int)
-    if min_frame > max_frame:
-        raise ValueError("Min frame must be lower or equal")
-
-    if min_frame < 0 or max_frame > 15000:
-        raise ValueError("Frames must be between 0 and 15k")
-
-    enc_slots = None
-    if "enc_slots" in method_j.keys() and method_j["enc_slots"].strip() != "":
-        try:
-            enc_slots = []
-            for x in method_j["enc_slots"].strip().split("/"):
-                x = int(x)
-                if x < 0 or x > 11:
-                    raise ValueError("Enc slot value must be within 0 and 11")
-                enc_slots.append(int(x))
-        except Exception as e:
-            raise ValueError(f"Bad enc slot: {e}")
-
-    natures = None
-    if "natures" in method_j.keys() and method_j["natures"].strip() != "":
-        natures = method_j["natures"].strip().split("/")
-
-    hidden_power_types = None
-    if "hidden_power_types" in method_j.keys() and method_j["hidden_power_types"].strip() != "":
-        hidden_power_types = method_j["hidden_power_types"].strip().split("/")
-
-    min_hidden_power = None
-    if "min_hidden_power" in method_j.keys() and method_j["min_hidden_power"].strip() != "":
-        try:
-            min_hidden_power = int(method_j["min_hidden_power"])
-            if min_hidden_power < 0 or min_hidden_power > 70:
-                raise ValueError("Min hidden power value must be within 0 and 70")
-        except Exception as e:
-            raise ValueError(f"Bad hidden power power: {e}")
-
-    min_ivs = None
-    if "min_ivs" in method_j.keys() and method_j["min_ivs"].strip() != "":
-        try:
-            min_ivs = []
-            for x in method_j["min_ivs"].strip().split("/"):
-                x = int(x)
-                if x < 0 or x > 31:
-                    raise ValueError("IV value must be within 0 and 31")
-                min_ivs.append(int(x))
-        except Exception as e:
-            raise ValueError(f"Bad IV: {e}")
-
-    max_ivs = None
-    if "max_ivs" in method_j.keys() and method_j["max_ivs"].strip() != "":
-        try:
-            max_ivs = []
-            for x in method_j["max_ivs"].strip().split("/"):
-                x = int(x)
-                if x < 0 or x > 31:
-                    raise ValueError("IV value must be within 0 and 31")
-                max_ivs.append(int(x))
-        except Exception as e:
-            raise ValueError(f"Bad IV: {e}")
-
-    min_item_deter = None
-    if "min_item_deter" in method_j.keys() and method_j["min_item_deter"].strip() != "":
-        try:
-            min_item_deter = int(method_j["min_item_deter"])
-            if min_item_deter < 0 or min_item_deter > 100:
-                raise ValueError("Min item determinant value must be within 0 and 70")
-        except Exception as e:
-            raise ValueError(f"Bad min item determinant: {e}")
-
-    max_item_deter = None
-    if "max_item_deter" in method_j.keys() and method_j["max_item_deter"].strip() != "":
-        try:
-            max_item_deter = int(method_j["max_item_deter"])
-            if max_item_deter < 0 or max_item_deter > 100:
-                raise ValueError("Max item determinant value must be within 0 and 70")
-        except Exception as e:
-            raise ValueError(f"Bad max item determinant: {e}")
-
-    ability = None
-    if "ability" in method_j.keys() and method_j["ability"].strip() != "":
-        ability = int(method_j["ability"])
-        if ability not in [0, 1]:
-            raise ValueError("Ability value must be 0 or 1")
-
-    enc_rate = try_get("enc_rate", method_j, int)
-
-    movement_rate = try_get("movement_rate", method_j, int)
-
-    is_surfing = not method_j["is_grass_var"]
-
-    min_level_surf = 0
-    max_level_surf = 0
-    min_avail_level_surf = 0
-    max_avail_level_surf = 0
-    if is_surfing:
-        min_level_surf = int(method_j["min_level_surf"])
-        max_level_surf = int(method_j["max_level_surf"])
-        min_avail_level_surf = int(method_j["min_avail_level_surf"])
-        max_avail_level_surf = int(method_j["max_avail_level_surf"])
-        if min_level_surf < min_avail_level_surf:
-            raise ValueError("Min surfing level below minimum")
-        if max_level_surf < min_level_surf:
-            raise ValueError("Max surfing level below min")
-        if max_level_surf > max_avail_level_surf:
-            raise ValueError("Max surfing level above maximum")
-
-    is_grass = method_j["is_grass_var"]
-    ignore_encounter_check = method_j["ignore_encounter_check_var"]
-    is_shiny = method_j["is_shiny_var"]
-
-    good = False
-
-    synchronize_target = method_j["synchronize_target"]
-    synchronize_natures = [None]
-
-    if synchronize_target is not None and synchronize_target.strip() != "":
-        synchronize_natures_list = synchronize_target.split("/")
+def populate_synchronize(seed_engine, method_j, all_queries):
+    if method_j.synchronize_target is not None and method_j.synchronize_target.strip() != "":
+        synchronize_natures_list = method_j.synchronize_target.split("/")
         target_natures = [x for x in synchronize_natures_list if x in get_natures_list()]
 
         if len(target_natures) == 0:
-            raw_query = [x for x in all_queries if "label" in x.keys() and x["label"].get() == synchronize_target]
+            raw_query = [x for x in all_queries if x.label == method_j.synchronize_target]
             if len(raw_query) == 1:
-                if raw_query["type"] == "MethodJ":
-                    result = verify_method_j(seed_engine, raw_query, all_queries)
-                    if result:
-                        for x in result:
-                            query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
-                            synchronize_natures.append(query_result[0].nature)
-                elif raw_query["type"] == "Method1":
-                    result = verify_method_1(seed_engine, raw_query)
-                    if result:
-                        for x in result:
-                            query_result = seed_engine.get_method_one_pokemon(x)
-                            synchronize_natures.append(query_result[0].nature)
+                raw_query = raw_query[0]
+                result = raw_query.verify_frames(seed_engine)
+
+                if result:
+                    for x in result:
+                        query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
+                        method_j.synchronize_natures.append(query_result[0].nature)
         else:
-            synchronize_natures += target_natures
-
-    for frame in range(min_frame, max_frame + 1):
-        for sync_nature in synchronize_natures:
-            result = seed_engine.get_method_j_pokemon(frame, is_grass, sync_nature)
-
-            poke = result[0]
-
-            slot = result[1]
-
-            if enc_slots is not None and int(slot) not in enc_slots:
-                continue
-
-            if is_shiny and not seed_engine.is_shiny(poke):
-                continue
-
-            if not ignore_encounter_check and not seed_engine.has_encounter(frame, enc_rate, movement_rate):
-                continue
-
-            if natures is not None and poke.nature not in natures:
-                continue
-
-            hidden_power = poke.get_hidden_power()
-
-            if hidden_power_types is not None and hidden_power[0] not in hidden_power_types:
-                continue
-
-            if hidden_power_types is not None and min_hidden_power > int(hidden_power[1]):
-                continue
-
-            poke_ivs = poke.ivs
-
-            if min_ivs is not None:
-                low_ivs = [int(a) - b for a, b in zip(poke_ivs, min_ivs)]
-
-                if min(low_ivs) < 0:
-                    continue
-
-            if max_ivs is not None:
-                high_ivs = [b - int(a) for a, b in zip(poke_ivs, max_ivs)]
-
-                if min(high_ivs) < 0:
-                    continue
-
-            poke_item = poke.item_determinator
-            if min_item_deter is not None and int(poke_item) < min_item_deter:
-                continue
-
-            if max_item_deter is not None and int(poke_item) > max_item_deter:
-                continue
-
-            if ability is not None and ability != int(poke.ability):
-                continue
-
-            if is_surfing:
-                level = seed_engine.get_level(frame, min_avail_level_surf, max_avail_level_surf)
-                if level < min_level_surf or level > max_level_surf:
-                    continue
-
-            if not good:
-                good = []
-
-            good.append(frame)
-            break
-
-    return good
+            method_j.synchronize_natures = method_j.synchronize_natures + target_natures
 
