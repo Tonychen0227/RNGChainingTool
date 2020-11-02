@@ -49,7 +49,7 @@ class PearlPlatSeedEngine:
         if self.populated_frames:
             return
 
-        frames += 1500
+        frames += 1000
 
         self.max_frames = frames
 
