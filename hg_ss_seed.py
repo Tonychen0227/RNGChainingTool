@@ -37,7 +37,7 @@ class HGSSSeedEngine:
         self.frames = [0] * 20000
         self.frames[0] = int(self.initial_seed, 16)
         for x in range(1, 20000):
-            self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
+            self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0xFFFFFFFF
 
     def get_initial_seed(self):
         return self.initial_seed.upper()
@@ -50,7 +50,7 @@ class HGSSSeedEngine:
         return self.frames[frame]
 
     def call(self, frame: int) -> str:
-        value = str(hex((self.get(frame) * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF))[2:][:-4]
+        value = str(hex((self.get(frame) * 0x41c64e6d + 0x6073) & 0xFFFFFFFF))[2:][:-4]
         while len(value) < 4:
             value = "0" + value
 

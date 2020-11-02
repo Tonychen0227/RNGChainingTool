@@ -49,15 +49,14 @@ class PearlPlatSeedEngine:
         if self.populated_frames:
             return
 
-        frames += 1000
+        frames += 500
 
         self.max_frames = frames
 
-        self.frames = [0] * frames
+        self.frames = {0: int(self.initial_seed, 16)}
 
-        self.frames[0] = int(self.initial_seed, 16)
-        for x in range(1, len(self.frames)):
-            self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF
+        for x in range(1, self.max_frames):
+            self.frames[x] = (self.frames[x - 1] * 0x41c64e6d + 0x6073) & 0xFFFFFFFF
 
         self.populated_frames = True
 
@@ -112,13 +111,17 @@ class PearlPlatSeedEngine:
 
     def get(self, frame):
         if frame >= self.max_frames:
-            raise ValueError(f"You cannot ask for a frame larger than {self.max_frames}")
+            current_frame = self.frames[self.max_frames - 1]
+            while frame >= self.max_frames:
+                current_frame = (current_frame * 0x41c64e6d + 0x6073) & 0xFFFFFFFF
+                self.frames.append(current_frame)
+                self.max_frames += 1
         elif frame < 0:
             raise ValueError("You cannot ask for a frame smaller than 0")
         return self.frames[frame]
 
     def call(self, frame: int) -> str:
-        value = str(hex((self.get(frame) * 0x41c64e6d + 0x6073) & 0x00000000FFFFFFFF))[2:][:-4]
+        value = str(hex((self.get(frame) * 0x41c64e6d + 0x6073) & 0xFFFFFFFF))[2:][:-4]
         while len(value) < 4:
             value = "0" + value
 
@@ -126,8 +129,8 @@ class PearlPlatSeedEngine:
 
     def get_level(self, frame: int, min_level: int, max_level: int):
         call = self.call(frame + 1)
-        range = max_level - min_level + 1
-        increment = int(call, 16) % range
+        level_range = max_level - min_level + 1
+        increment = int(call, 16) % level_range
         return increment + min_level
 
     def has_encounter(self, frame: int, enc_rate: int, movement_rate: int) -> bool:
@@ -216,8 +219,7 @@ class PearlPlatSeedEngine:
                 slot = x
                 break
 
-        if not is_grass:
-            current_frame += 1
+        if not is_grass: current_frame += 1
 
         current_frame += 1
 
@@ -260,12 +262,8 @@ class PearlPlatSeedEngine:
         big_hex = self.call(call_1 + 2) + self.call(call_2 + 2)
         big_binary = bin(int(big_hex, 16))[2:].zfill(32)
 
-        def_iv = int(big_binary[1:6], 2)
-        atk_iv = int(big_binary[6:11], 2)
-        hp_iv = int(big_binary[11:16], 2)
-        spdef_iv = int(big_binary[17:22], 2)
-        spatk_iv = int(big_binary[22:27], 2)
-        spe_iv = int(big_binary[27:32], 2)
+        def_iv, atk_iv, hp_iv = int(big_binary[1:6], 2), int(big_binary[6:11], 2), int(big_binary[11:16], 2)
+        spdef_iv, spatk_iv, spe_iv = int(big_binary[17:22], 2), int(big_binary[22:27], 2), int(big_binary[27:32], 2)
 
         ivs = (hp_iv, atk_iv, def_iv, spatk_iv, spdef_iv, spe_iv)
 
