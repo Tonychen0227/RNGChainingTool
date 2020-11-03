@@ -49,8 +49,6 @@ class PearlPlatSeedEngine:
         if self.populated_frames:
             return
 
-        frames += 500
-
         self.max_frames = frames
 
         self.frames = {0: int(self.initial_seed, 16)}
@@ -114,7 +112,7 @@ class PearlPlatSeedEngine:
             current_frame = self.frames[self.max_frames - 1]
             while frame >= self.max_frames:
                 current_frame = (current_frame * 0x41c64e6d + 0x6073) & 0xFFFFFFFF
-                self.frames.append(current_frame)
+                self.frames[self.max_frames] = current_frame
                 self.max_frames += 1
         elif frame < 0:
             raise ValueError("You cannot ask for a frame smaller than 0")
