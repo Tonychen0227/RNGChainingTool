@@ -80,5 +80,7 @@
   "Minsecs": "46",
   "Maxsecs": "46",
   "Mindelay": "5719",
-  "Maxdelay": "5719"
+  "Maxdelay": "5719",
+  "tid": "",
+  "sid": ""
 }

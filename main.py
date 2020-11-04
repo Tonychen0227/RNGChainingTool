@@ -1,3 +1,5 @@
+import csv
+import datetime
 import sys
 import traceback
 
@@ -6,6 +8,7 @@ from os import path
 import json
 import os
 
+from benchmark import Benchmark
 from search import search_details
 from tests import Test
 
@@ -355,11 +358,27 @@ def search():
 if __name__ == "__main__":
     Test()
 
+    '''
+    time = datetime.datetime.now()
+    for x in range(0, 10):
+        Benchmark()
+
+    current_time = datetime.datetime.now()
+    total_seconds = (current_time - time).total_seconds()
+
+    progress_file_name = f'benchmarks/{datetime.datetime.now().strftime("%Y_%b_%d_%H:%M:%S")}.csv'
+
+    with open(progress_file_name, 'w+') as progress_file:
+        progress = csv.writer(progress_file, lineterminator='\n')
+        progress.writerow([f"{total_seconds} seconds"])
+    '''
+
     if len(sys.argv) > 1:
         if os.path.exists(sys.argv[1]):
             with open(sys.argv[1]) as json_file:
                 existing = json.load(json_file)
                 search_details(existing)
+        exit()
 
     current_row = 0
 

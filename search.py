@@ -195,7 +195,7 @@ def validate_and_transform_query(query) -> VerifiableQuery:
     return ret
 
 
-def search_details(details):
+def search_details(details, is_dry_run : bool = False):
     min_month_internal = try_get("Minmonth", details, int)
     max_month_internal = try_get("Maxmonth", details, int)
     min_day_internal = try_get("Minday", details, int)
@@ -335,7 +335,7 @@ def search_details(details):
 
         seed_engine.populate(max_frames)
 
-        if checked % 100 == 0:
+        if not is_dry_run and checked % 100 == 0:
             current_time = datetime.datetime.now()
             total_seconds = (current_time - time).total_seconds()
             with open(progress_file_name, 'a+') as progress_file:
@@ -360,24 +360,25 @@ def search_details(details):
                 else:
                     frames[class_name] = [verify_result]
 
-            with open(log_file_name, 'a+') as outfile:
-                f = csv.writer(outfile, lineterminator='\n')
-                f.writerow([f"Seed {seed_engine.get_initial_seed()} (Year 2000) (on {combination[0]}/{combination[1]} "
-                            f"at {combination[2]}:{combination[3]}:{combination[4]} Delay {combination[5]})"])
-                four_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                 combination[4], combination[5] - 4)
-                two_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                combination[4], combination[5] - 2)
-                two_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                               combination[4], combination[5] + 2)
-                four_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                combination[4], combination[5] + 4)
-                f.writerow([f"SIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
-                            f"0: {seed_engine.get_tid_sid()[0]} "
-                            f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
-                f.writerow([str(frames)])
+            if not is_dry_run:
+                with open(log_file_name, 'a+') as outfile:
+                    f = csv.writer(outfile, lineterminator='\n')
+                    f.writerow([f"Seed {seed_engine.get_initial_seed()} (Year 2000) (on {combination[0]}/{combination[1]} "
+                                f"at {combination[2]}:{combination[3]}:{combination[4]} Delay {combination[5]})"])
+                    four_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                                     combination[4], combination[5] - 4)
+                    two_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                                    combination[4], combination[5] - 2)
+                    two_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                                   combination[4], combination[5] + 2)
+                    four_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                                    combination[4], combination[5] + 4)
+                    f.writerow([f"SIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
+                                f"0: {seed_engine.get_tid_sid()[0]} "
+                                f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
+                    f.writerow([str(frames)])
 
-                del four_early, two_early, two_late, four_late
+                    del four_early, two_early, two_late, four_late
 
             del seed_engine
 
