@@ -346,13 +346,13 @@ def search_details(details, is_dry_run : bool = False):
         try:
             frames = {}
             for query in fixed_queries:
+                query_label = query.label
                 if isinstance(query, MethodJ):
                     query.synchronize_natures = [None]
                     populate_synchronize(seed_engine, query, fixed_queries, query_label)
                 verify_result = query.verify_frames(seed_engine)
                 if not verify_result:
                     raise WindowsError("")
-                query_label = query.label
                 if query_label in frames.keys():
                     temp = frames[query_label]
                     temp.append(verify_result)
