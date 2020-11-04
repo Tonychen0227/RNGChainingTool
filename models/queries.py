@@ -1,5 +1,6 @@
 import abc
 
+from models.enums import EncounterArea
 from pearl_plat_seed import PearlPlatSeedEngine
 
 
@@ -108,6 +109,8 @@ class MethodJ(VerifiableQuery):
         self.synchronize_target = []
         self.synchronize_natures = []
         self.label = ""
+        self.tid = 0
+        self.sid = 0
 
     def verify_frames(self, seed_engine: PearlPlatSeedEngine):
         good = False
@@ -156,7 +159,7 @@ class MethodJ(VerifiableQuery):
                 if self.min_item_deter is not None and int(poke_item) < self.min_item_deter:
                     continue
 
-                if not self.ignore_encounter_check and not \
+                if not self.ignore_encounter_check and self.encounter_area <= EncounterArea.Surfing and not \
                         seed_engine.has_encounter(frame, self.enc_rate, self.movement_rate):
                     continue
 
