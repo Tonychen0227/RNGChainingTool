@@ -37,6 +37,8 @@ class Method1(VerifiableQuery):
         self.ability = 0
         self.is_shiny = False
         self.label = ""
+        self.tid = 0
+        self.sid = 0
 
     def verify_frames(self, seed_engine: PearlPlatSeedEngine):
         good = False
@@ -71,7 +73,7 @@ class Method1(VerifiableQuery):
             if self.ability is not None and self.ability != int(poke.ability):
                 continue
 
-            if self.is_shiny and not seed_engine.is_shiny(poke):
+            if self.is_shiny and not seed_engine.is_shiny(poke, self.tid, self.sid):
                 continue
 
             if not good:
@@ -97,11 +99,11 @@ class MethodJ(VerifiableQuery):
         self.max_item_deter = 100
         self.enc_rate = 70
         self.movement_rate = 30
-        self.is_surfing = False
-        self.min_level_surf = 0
-        self.max_level_surf = 100
-        self.min_avail_level_surf = 0
-        self.max_avail_level_surf = 100
+        self.encounter_area = 0
+        self.min_level_water = 0
+        self.max_level_water = 100
+        self.min_avail_level_water = 0
+        self.max_avail_level_water = 100
         self.ignore_encounter_check = False
         self.synchronize_target = []
         self.synchronize_natures = []
@@ -111,7 +113,10 @@ class MethodJ(VerifiableQuery):
         good = False
         for frame in range(self.min_frame, self.max_frame + 1):
             for synchronize_nature in self.synchronize_natures:
-                poke_result = seed_engine.get_method_j_pokemon(frame, not self.is_surfing, synchronize_nature)
+                poke_result = seed_engine.get_method_j_pokemon(frame, self.encounter_area, synchronize_nature)
+
+                if poke_result is None:
+                    continue
 
                 poke = poke_result[0]
                 slot = poke_result[1]
@@ -144,7 +149,7 @@ class MethodJ(VerifiableQuery):
                 if self.ability is not None and self.ability != int(poke.ability):
                     continue
 
-                if self.is_shiny and not seed_engine.is_shiny(poke):
+                if self.is_shiny and not seed_engine.is_shiny(poke, self.tid, self.sid):
                     continue
 
                 poke_item = poke.item_determinator
@@ -158,9 +163,9 @@ class MethodJ(VerifiableQuery):
                 if self.enc_slots is not None and int(slot) not in self.enc_slots:
                     continue
 
-                if self.is_surfing:
-                    level = seed_engine.get_level(frame, self.min_avail_level_surf, self.max_avail_level_surf)
-                    if level < self.min_level_surf or level > self.max_level_surf:
+                if self.encounter_area >= 1:
+                    level = seed_engine.get_level(frame, self.min_avail_level_water, self.max_avail_level_water)
+                    if level < self.min_level_water or level > self.max_level_water:
                         continue
 
                 if not good:

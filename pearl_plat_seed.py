@@ -1,15 +1,8 @@
 import math
 from typing import Tuple
 
+from models.enums import Nature, EncounterArea
 from models.pokemon import Pokemon
-
-
-def get_natures_list():
-    natures = ["Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish",
-               "Lax", "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful",
-               "Rash", "Calm", "Gentle", "Sassy", "Careful", "Quirky"]
-
-    return natures
 
 
 class PearlPlatSeedEngine:
@@ -102,6 +95,8 @@ class PearlPlatSeedEngine:
             self.tid = tid
             self.sid = sid
 
+            self.populated_tid_sid = True
+
         return self.tid, self.sid
 
     def get_initial_seed(self):
@@ -149,12 +144,17 @@ class PearlPlatSeedEngine:
         else:
             return False
 
-    def is_shiny(self, pokemon: Pokemon) -> bool:
-        if not self.populated_tid_sid:
-            self.get_tid_sid()
-
+    def is_shiny(self, pokemon: Pokemon, tid=None, sid=None) -> bool:
         top_call = int(pokemon.pid[:4].lower(), 16)
         bottom_call = int(pokemon.pid[4:].lower(), 16)
+
+        if tid and sid:
+            self.tid = tid
+            self.sid = sid
+        elif not self.populated_tid_sid:
+            self.get_tid_sid()
+        else:
+            return False
 
         return self.tid ^ self.sid ^ top_call ^ bottom_call < 8
 
@@ -178,7 +178,7 @@ class PearlPlatSeedEngine:
         while nature_value > 24:
             nature_value -= 25
 
-        nature = get_natures_list()[nature_value]
+        nature = Nature(nature_value)
 
         ability = int(pid, 16) % 2
 
@@ -202,32 +202,48 @@ class PearlPlatSeedEngine:
 
         return new_pokemon
 
-    def get_method_j_pokemon(self, frame, is_grass: bool, synchronize_nature: str = None) -> Tuple[Pokemon, int]:
+    def get_method_j_pokemon(self, frame, encounter_area: int, synchronize_nature: str = None) -> Tuple[Pokemon, int] or None:
         current_frame = frame
 
-        if not is_grass:
-            target_slots = [60, 90, 95, 99, 100]
+        if encounter_area >= EncounterArea.Surfing:
+            encounter_call = int(self.call(current_frame), 16)
+            if encounter_area == EncounterArea.Surfing:
+                target_slots = [60, 90, 95, 99, 100]
+            elif encounter_call / 656 >= (encounter_area - 1)*25:
+                return None
+            else:
+                if encounter_area >= EncounterArea.FishingGood:
+                    target_slots = [40, 80, 95, 99, 100]
+                else:
+                    target_slots = [60, 90, 95, 99, 100]
         else:
             target_slots = [20, 40, 50, 60, 70, 80, 85, 90, 94, 98, 99, 100]
 
         slot = 255
 
+        if encounter_area >= EncounterArea.FishingOld:
+            slots_call = int(self.call(current_frame+1), 16)
+        else:
+            slots_call = int(self.call(current_frame), 16)
+
         for x in range(0, len(target_slots)):
-            if int(self.call(frame), 16) / 656 < target_slots[x]:
+            if slots_call / 656 < target_slots[x]:
                 slot = x
                 break
 
-        if not is_grass: current_frame += 1
+        if encounter_area >= EncounterArea.Surfing:
+            current_frame += 1
+
+        if encounter_area >= EncounterArea.FishingOld:
+            current_frame += 1
 
         current_frame += 1
 
         call = self.call(current_frame)
 
-        natures = get_natures_list()
-
         if synchronize_nature is not None:
             if int(call, 16) >> 15 == 0:
-                nature_value = natures.index(synchronize_nature)
+                nature_value = Nature[synchronize_nature]
             else:
                 current_frame += 1
                 call = self.call(current_frame)
@@ -235,7 +251,7 @@ class PearlPlatSeedEngine:
         else:
             nature_value = math.floor(int(call, 16) / 0xA3E)
 
-        nature = natures[math.floor(nature_value)]
+        nature = Nature(math.floor(nature_value))
 
         call_1 = current_frame + 1
         call_2 = current_frame + 2

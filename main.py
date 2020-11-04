@@ -39,7 +39,7 @@ def fill_queries():
 
         start_row += 1
         for item in query.keys():
-            if item in ["type", "is_grass_var", "is_shiny_var", "ignore_encounter_check_var"]:
+            if item in ["type", "encounter_area_var", "is_shiny_var", "ignore_encounter_check_var"]:
                 continue
             tk.Label(master, text=item).grid(row=start_row, column=current_column)
             current_column += 1
@@ -60,9 +60,9 @@ def get_raws_from_query(query):
         if key == "type":
             ret[key] = query[key]
             continue
-        if key in ["is_grass", "is_shiny", "ignore_encounter_check"]:
+        if key in ["encounter_area", "is_shiny", "ignore_encounter_check"]:
             continue
-        if key in ["is_grass_var", "is_shiny_var", "ignore_encounter_check_var"]:
+        if key in ["encounter_area_var", "is_shiny_var", "ignore_encounter_check_var"]:
             ret[key] = query[key].get()
             continue
         ret[key] = query[key].get()
@@ -135,7 +135,7 @@ def load_file():
                         if key == "type":
                             current[key] = query[key]
                             continue
-                        if key in ["is_grass_var", "is_shiny_var", "ignore_encounter_check_var"]:
+                        if key in ["encounter_area_var", "is_shiny_var", "ignore_encounter_check_var"]:
                             current[key].set(query[key])
                             continue
                         current[key].delete(0, tk.END)
@@ -216,8 +216,9 @@ def add_method_j():
     entry13 = tk.Entry(master)
     entry13.insert(0, 70)
 
-    variable3 = tk.BooleanVar(master)
-    button3 = tk.Checkbutton(master, variable=variable3)
+    variable3 = tk.StringVar(master)
+    variable3.set("Surfing")  # default value
+    menu3 = tk.OptionMenu(master, variable3, "Grass", "Surfing", "FishingOld", "FishingGood", "FishingSuper")
 
     variable4 = tk.BooleanVar(master)
     button4 = tk.Checkbutton(master, variable=variable4)
@@ -254,16 +255,16 @@ def add_method_j():
         "max_frame": entry11,
         "enc_rate": entry12,
         "movement_rate": entry13,
-        "is_grass": button3,
-        "is_grass_var": variable3,
+        "encounter_area": menu3,
+        "encounter_area_var": variable3,
         "ignore_encounter_check": button4,
         "ignore_encounter_check_var": variable4,
         "is_shiny": button5,
         "is_shiny_var": variable5,
-        "min_level_surf": entry16,
-        "max_level_surf": entry19,
-        "min_avail_level_surf": entry17,
-        "max_avail_level_surf": entry18
+        "min_level_water": entry16,
+        "max_level_water": entry19,
+        "min_avail_level_water": entry17,
+        "max_avail_level_water": entry18
     }
 
     queries.append(new_query)
@@ -384,6 +385,8 @@ if __name__ == "__main__":
     max_secs = tk.Entry(master)
     min_delay = tk.Entry(master)
     max_delay = tk.Entry(master)
+    tid = tk.Entry(master)
+    sid = tk.Entry(master)
 
     labels = {
         "Min month": min_month,
@@ -397,7 +400,9 @@ if __name__ == "__main__":
         "Min secs": min_secs,
         "Max secs": max_secs,
         "Min delay": min_delay,
-        "Max delay": max_delay
+        "Max delay": max_delay,
+        "tid": tid,
+        "sid": sid
     }
 
     current_row = fill_labels(labels, current_row + 1)

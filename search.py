@@ -2,8 +2,9 @@ import csv
 import random
 import datetime
 
+from models.enums import EncounterArea, Nature
 from models.queries import PKRS, Method1, MethodJ, VerifiableQuery
-from pearl_plat_seed import PearlPlatSeedEngine, get_natures_list
+from pearl_plat_seed import PearlPlatSeedEngine
 
 
 def try_get(key, details, type_to_cast):
@@ -32,7 +33,7 @@ def validate_and_transform_query(query) -> VerifiableQuery:
 
     natures = None
     if "natures" in query.keys() and query["natures"].strip() != "":
-        natures = query["natures"].strip().split("/")
+        natures = [Nature[x] for x in query["natures"].strip().split("/")]
 
     hidden_power_types = None
     if "hidden_power_types" in query.keys() and query["hidden_power_types"].strip() != "":
@@ -130,23 +131,23 @@ def validate_and_transform_query(query) -> VerifiableQuery:
 
     movement_rate = try_get("movement_rate", query, int)
 
-    is_surfing = not query["is_grass_var"]
+    encounter_area = EncounterArea[query["encounter_area_var"]]
 
-    min_level_surf = 0
-    max_level_surf = 0
-    min_avail_level_surf = 0
-    max_avail_level_surf = 0
-    if is_surfing:
-        min_level_surf = int(query["min_level_surf"])
-        max_level_surf = int(query["max_level_surf"])
-        min_avail_level_surf = int(query["min_avail_level_surf"])
-        max_avail_level_surf = int(query["max_avail_level_surf"])
-        if min_level_surf < min_avail_level_surf:
-            raise ValueError("Min surfing level below minimum")
-        if max_level_surf < min_level_surf:
-            raise ValueError("Max surfing level below min")
-        if max_level_surf > max_avail_level_surf:
-            raise ValueError("Max surfing level above maximum")
+    min_level_water = 0
+    max_level_water = 0
+    min_avail_level_water = 0
+    max_avail_level_water = 0
+    if int(encounter_area) >= 1:
+        min_level_water = int(query["min_level_water"])
+        max_level_water = int(query["max_level_water"])
+        min_avail_level_water = int(query["min_avail_level_water"])
+        max_avail_level_water = int(query["max_avail_level_water"])
+        if min_level_water < min_avail_level_water:
+            raise ValueError("Min water level below minimum")
+        if max_level_water < min_level_water:
+            raise ValueError("Max water level below min")
+        if max_level_water > max_avail_level_water:
+            raise ValueError("Max water level above maximum")
 
     ignore_encounter_check = query["ignore_encounter_check_var"]
 
@@ -168,11 +169,11 @@ def validate_and_transform_query(query) -> VerifiableQuery:
     ret.max_item_deter = max_item_deter
     ret.enc_rate = enc_rate
     ret.movement_rate = movement_rate
-    ret.is_surfing = is_surfing
-    ret.min_level_surf = min_level_surf
-    ret.max_level_surf = max_level_surf
-    ret.min_avail_level_surf = min_avail_level_surf
-    ret.max_avail_level_surf = max_avail_level_surf
+    ret.encounter_area = encounter_area
+    ret.min_level_water = min_level_water
+    ret.max_level_water = max_level_water
+    ret.min_avail_level_water = min_avail_level_water
+    ret.max_avail_level_water = max_avail_level_water
     ret.ignore_encounter_check = ignore_encounter_check
     ret.synchronize_target = synchronize_target
     ret.synchronize_natures = synchronize_natures
@@ -193,6 +194,15 @@ def search_details(details):
     max_secs_internal = try_get("Maxsecs", details, int)
     min_delay_internal = try_get("Mindelay", details, int)
     max_delay_internal = try_get("Maxdelay", details, int)
+    if details["tid"] is not None and details["tid"].strip() != "":
+        tid = int(details["tid"])
+    else:
+        tid = None
+
+    if details["sid"] is not None and details["sid"].strip() != "":
+        sid = int(details["sid"])
+    else:
+        sid = None
 
     if min_month_internal < 1 or max_month_internal > 12:
         raise ValueError("Month must be in between 1, 12")
@@ -296,7 +306,10 @@ def search_details(details):
     fixed_queries = []
 
     for inner_query in inner_queries:
-        fixed_queries.append(validate_and_transform_query(inner_query))
+        new_query = validate_and_transform_query(inner_query)
+        new_query.tid = tid
+        new_query.sid = sid
+        fixed_queries.append(new_query)
 
     del inner_queries
 
@@ -362,7 +375,7 @@ def search_details(details):
 def populate_synchronize(seed_engine, method_j, all_queries):
     if method_j.synchronize_target is not None and method_j.synchronize_target.strip() != "":
         synchronize_natures_list = method_j.synchronize_target.split("/")
-        target_natures = [x for x in synchronize_natures_list if x in get_natures_list()]
+        target_natures = [x for x in synchronize_natures_list if x in Nature.__members__]
 
         if len(target_natures) == 0:
             raw_query = [x for x in all_queries if x.label == method_j.synchronize_target]
@@ -372,7 +385,7 @@ def populate_synchronize(seed_engine, method_j, all_queries):
 
                 if result:
                     for x in result:
-                        query_result = seed_engine.get_method_j_pokemon(x, raw_query["is_grass_var"])
+                        query_result = seed_engine.get_method_j_pokemon(x, raw_query.encounter_area)
                         method_j.synchronize_natures.append(query_result[0].nature)
         else:
             method_j.synchronize_natures = method_j.synchronize_natures + target_natures
