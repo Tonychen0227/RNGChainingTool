@@ -1,7 +1,5 @@
-import math
 from typing import Tuple
 
-from models.enums import Nature, EncounterArea
 from models.pokemon import Pokemon
 
 
@@ -178,7 +176,9 @@ class PearlPlatSeedEngine:
         while nature_value > 24:
             nature_value -= 25
 
-        nature = Nature(nature_value)
+        nature = ["Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish",
+               "Lax", "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful",
+               "Rash", "Calm", "Gentle", "Sassy", "Careful", "Quirky"][nature_value]
 
         ability = int(pid, 16) % 2
 
@@ -205,14 +205,14 @@ class PearlPlatSeedEngine:
     def get_method_j_pokemon(self, frame, encounter_area: int, synchronize_nature: str = None) -> Tuple[Pokemon, int] or None:
         current_frame = frame
 
-        if encounter_area >= EncounterArea.Surfing:
+        if encounter_area >= 1:
             encounter_call = int(self.call(current_frame), 16)
-            if encounter_area == EncounterArea.Surfing:
+            if encounter_area == 1:
                 target_slots = [60, 90, 95, 99, 100]
             elif encounter_call / 656 >= (encounter_area - 1)*25:
                 return None
             else:
-                if encounter_area >= EncounterArea.FishingGood:
+                if encounter_area >= 3:
                     target_slots = [40, 80, 95, 99, 100]
                 else:
                     target_slots = [60, 90, 95, 99, 100]
@@ -221,7 +221,7 @@ class PearlPlatSeedEngine:
 
         slot = 255
 
-        if encounter_area >= EncounterArea.FishingOld:
+        if encounter_area >= 2:
             slots_call = int(self.call(current_frame+1), 16)
         else:
             slots_call = int(self.call(current_frame), 16)
@@ -231,10 +231,10 @@ class PearlPlatSeedEngine:
                 slot = x
                 break
 
-        if encounter_area >= EncounterArea.Surfing:
+        if encounter_area >= 1:
             current_frame += 1
 
-        if encounter_area >= EncounterArea.FishingOld:
+        if encounter_area >= 2:
             current_frame += 1
 
         current_frame += 1
@@ -243,15 +243,19 @@ class PearlPlatSeedEngine:
 
         if synchronize_nature is not None:
             if int(call, 16) >> 15 == 0:
-                nature_value = Nature[synchronize_nature]
+                nature_value = ["Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish",
+               "Lax", "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful",
+               "Rash", "Calm", "Gentle", "Sassy", "Careful", "Quirky"].index(synchronize_nature)
             else:
                 current_frame += 1
                 call = self.call(current_frame)
-                nature_value = math.floor(int(call, 16) / 0xA3E)
+                nature_value = int(call, 16) // 0xA3E
         else:
-            nature_value = math.floor(int(call, 16) / 0xA3E)
+            nature_value = int(call, 16) // 0xA3E
 
-        nature = Nature(math.floor(nature_value))
+        nature = ["Hardy", "Lonely", "Brave", "Adamant", "Naughty", "Bold", "Docile", "Relaxed", "Impish",
+               "Lax", "Timid", "Hasty", "Serious", "Jolly", "Naive", "Modest", "Mild", "Quiet", "Bashful",
+               "Rash", "Calm", "Gentle", "Sassy", "Careful", "Quirky"][nature_value]
 
         call_1 = current_frame + 1
         call_2 = current_frame + 2

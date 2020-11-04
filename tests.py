@@ -1,4 +1,4 @@
-from models.enums import Nature, EncounterArea
+from models.enums import EncounterArea
 from pearl_plat_seed import PearlPlatSeedEngine
 
 
@@ -25,7 +25,7 @@ class Test:
 
         assert poke.ivs == (26, 31, 25, 16, 18, 28)
 
-        assert poke.nature == Nature.Impish
+        assert poke.nature == "Impish"
 
         assert poke.ability == 1
 
@@ -51,7 +51,7 @@ class Test:
 
         assert poke.ivs == (0, 18, 31, 30, 4, 19)
 
-        assert poke.nature == Nature.Hasty
+        assert poke.nature == "Hasty"
 
         assert poke.ability == 1
 
@@ -76,7 +76,7 @@ class Test:
 
         assert poke.ivs == (17, 4, 31, 15, 2, 14)
 
-        assert poke.nature == Nature.Naughty
+        assert poke.nature == "Naughty"
 
         assert poke.ability == 1
 
@@ -98,7 +98,7 @@ class Test:
 
         assert poke.ivs == (17, 7, 11, 25, 8, 19)
 
-        assert poke.nature == Nature.Quiet
+        assert poke.nature == "Quiet"
 
         assert poke.ability == 0
 
@@ -124,7 +124,7 @@ class Test:
 
         assert poke.ivs == (16, 12, 18, 17, 13, 27)
 
-        assert poke.nature == Nature.Impish
+        assert poke.nature == "Impish"
 
         assert poke.ability == 0
 
@@ -150,7 +150,7 @@ class Test:
 
         assert poke.ivs == (21, 16, 10, 17, 23, 29)
 
-        assert poke.nature == Nature.Docile
+        assert poke.nature == "Docile"
 
         assert poke.ability == 1
 
@@ -176,7 +176,7 @@ class Test:
 
         assert poke.ivs == (11, 20, 0, 27, 4, 20)
 
-        assert poke.nature == Nature.Gentle
+        assert poke.nature == "Gentle"
 
         assert poke.ability == 0
 
@@ -200,7 +200,7 @@ class Test:
 
         assert poke.ivs == (12, 31, 31, 21, 14, 20)
 
-        assert poke.nature == Nature.Impish
+        assert poke.nature == "Impish"
 
         assert poke.ability == 1
 
@@ -226,7 +226,7 @@ class Test:
 
         assert poke.ivs == (13, 0, 20, 9, 20, 18)
 
-        assert poke.nature == Nature.Bashful
+        assert poke.nature == "Bashful"
 
         assert poke.ability == 1
 
@@ -250,7 +250,7 @@ class Test:
 
         assert poke.ivs == (26, 14, 4, 13, 14, 30)
 
-        assert poke.nature == Nature.Impish
+        assert poke.nature == "Impish"
 
         assert poke.ability == 0
 
@@ -276,7 +276,7 @@ class Test:
 
         assert poke.ivs == (1, 12, 21, 6, 4, 19)
 
-        assert poke.nature == Nature.Calm
+        assert poke.nature == "Calm"
 
         assert poke.ability == 1
 
@@ -302,7 +302,7 @@ class Test:
 
         assert poke.ivs == (2, 8, 31, 25, 24, 14)
 
-        assert poke.nature == Nature.Serious
+        assert poke.nature == "Serious"
 
         assert poke.ability == 0
 
@@ -326,7 +326,7 @@ class Test:
 
         assert poke.ivs == (31, 18, 16, 30, 21, 0)
 
-        assert poke.nature == Nature.Rash
+        assert poke.nature == "Rash"
 
         assert poke.ability == 0
 
@@ -350,7 +350,7 @@ class Test:
 
         assert poke.ivs == (1, 13, 2, 25, 27, 12)
 
-        assert poke.nature == Nature.Serious
+        assert poke.nature == "Serious"
 
         assert poke.ability == 1
 
@@ -374,7 +374,7 @@ class Test:
 
         assert poke.ivs == (2, 8, 31, 25, 24, 14)
 
-        assert poke.nature == Nature.Serious
+        assert poke.nature == "Serious"
 
         assert poke.ability == 0
 
@@ -439,7 +439,7 @@ class Test:
 
         assert poke.ivs == (31, 30, 31, 29, 28, 30)
 
-        assert poke.nature == Nature.Naughty
+        assert poke.nature == "Naughty"
 
         assert poke.ability == 1
 

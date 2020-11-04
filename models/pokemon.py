@@ -1,6 +1,3 @@
-import math
-
-
 class Pokemon:
     def __init__(self, frame, pid, ability, ivs, nature, gender_determinator, occid, item_determinator):
         self.frame = frame
@@ -46,15 +43,15 @@ class Pokemon:
         e = self.spatk_iv % 2
         f = self.spdef_iv % 2
 
-        type = types[math.floor((a + 2*b + 4*c + 8*d + 16*e + 32*f) * 15 / 63)]
+        type = types[(a + 2*b + 4*c + 8*d + 16*e + 32*f) * 15 // 63]
 
-        u = math.floor(self.hp_iv % 4 / 2)
-        v = math.floor(self.atk_iv % 4 / 2)
-        w = math.floor(self.def_iv % 4 / 2)
-        x = math.floor(self.spe_iv % 4 / 2)
-        y = math.floor(self.spatk_iv % 4 / 2)
-        z = math.floor(self.spdef_iv % 4 / 2)
+        u = self.hp_iv % 4 // 2
+        v = self.atk_iv % 4 // 2
+        w = self.def_iv % 4 // 2
+        x = self.spe_iv % 4 // 2
+        y = self.spatk_iv % 4 // 2
+        z = self.spdef_iv % 4 // 2
 
-        damage = math.floor(((u + 2*v + 4*w + 8*x + 16*y + 32*z) * 40 / 63) + 30)
+        damage = ((u + 2*v + 4*w + 8*x + 16*y + 32*z) * 40 // 63) + 30
 
         return type, damage

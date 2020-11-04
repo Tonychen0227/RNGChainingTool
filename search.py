@@ -2,7 +2,7 @@ import csv
 import random
 import datetime
 
-from models.enums import EncounterArea, Nature
+from models.enums import EncounterArea
 from models.queries import PKRS, Method1, MethodJ, VerifiableQuery
 from pearl_plat_seed import PearlPlatSeedEngine
 
@@ -31,28 +31,34 @@ def validate_and_transform_query(query) -> VerifiableQuery:
 
     label = query["label"]
 
+    query_keys = query.keys()
+
     natures = None
-    if "natures" in query.keys() and query["natures"].strip() != "":
-        natures = [Nature[x] for x in query["natures"].strip().split("/")]
+    stripped_natures = query["natures"].strip()
+    if "natures" in query_keys and stripped_natures != "":
+        natures = stripped_natures.split("/")
 
     hidden_power_types = None
-    if "hidden_power_types" in query.keys() and query["hidden_power_types"].strip() != "":
-        hidden_power_types = query["hidden_power_types"].strip().split("/")
+    stripped_hidden_power_types = query["hidden_power_types"].strip()
+    if "hidden_power_types" in query_keys and stripped_hidden_power_types != "":
+        hidden_power_types = stripped_hidden_power_types.split("/")
 
     min_hidden_power = None
-    if "min_hidden_power" in query.keys() and query["min_hidden_power"].strip() != "":
+    stripped_min_hidden_power = query["min_hidden_power"].strip()
+    if "min_hidden_power" in query_keys and stripped_min_hidden_power != "":
         try:
-            min_hidden_power = int(query["min_hidden_power"])
+            min_hidden_power = int(stripped_min_hidden_power)
             if min_hidden_power < 0 or min_hidden_power > 70:
                 raise ValueError("Min hidden power value must be within 0 and 70")
         except Exception as e:
             raise ValueError(f"Bad hidden power power: {e}")
 
     min_ivs = None
-    if "min_ivs" in query.keys() and query["min_ivs"].strip() != "":
+    stripped_min_ivs = query["min_ivs"].strip()
+    if "min_ivs" in query_keys and stripped_min_ivs != "":
         try:
             min_ivs = []
-            for x in query["min_ivs"].strip().split("/"):
+            for x in stripped_min_ivs.split("/"):
                 x = int(x)
                 if x < 0 or x > 31:
                     raise ValueError("IV value must be within 0 and 31")
@@ -61,10 +67,11 @@ def validate_and_transform_query(query) -> VerifiableQuery:
             raise ValueError(f"Bad IV: {e}")
 
     max_ivs = None
-    if "max_ivs" in query.keys() and query["max_ivs"].strip() != "":
+    stripped_max_ivs = query["max_ivs"].strip()
+    if "max_ivs" in query_keys and stripped_max_ivs != "":
         try:
             max_ivs = []
-            for x in query["max_ivs"].strip().split("/"):
+            for x in stripped_max_ivs.split("/"):
                 x = int(x)
                 if x < 0 or x > 31:
                     raise ValueError("IV value must be within 0 and 31")
@@ -73,9 +80,10 @@ def validate_and_transform_query(query) -> VerifiableQuery:
             raise ValueError(f"Bad IV: {e}")
 
     ability = None
-    if "ability" in query.keys() and query["ability"].strip() != "":
+    stripped_ability = query["ability"].strip()
+    if "ability" in query_keys and stripped_ability != "":
         try:
-            ability = int(query["ability"])
+            ability = int(stripped_ability)
             if ability not in [0, 1]:
                 raise ValueError("Ability value must be 0 or 1")
         except Exception as e:
@@ -98,10 +106,11 @@ def validate_and_transform_query(query) -> VerifiableQuery:
         return ret
 
     enc_slots = None
-    if "enc_slots" in query.keys() and query["enc_slots"].strip() != "":
+    stripped_enc_slots = query["enc_slots"].strip()
+    if "enc_slots" in query_keys and stripped_enc_slots != "":
         try:
             enc_slots = []
-            for x in query["enc_slots"].strip().split("/"):
+            for x in stripped_enc_slots.split("/"):
                 x = int(x)
                 if x < 0 or x > 11:
                     raise ValueError("Enc slot value must be within 0 and 11")
@@ -110,18 +119,20 @@ def validate_and_transform_query(query) -> VerifiableQuery:
             raise ValueError(f"Bad enc slot: {e}")
 
     min_item_deter = None
-    if "min_item_deter" in query.keys() and query["min_item_deter"].strip() != "":
+    stripped_min_item_deter = query["min_item_deter"].strip()
+    if "min_item_deter" in query_keys and stripped_min_item_deter != "":
         try:
-            min_item_deter = int(query["min_item_deter"])
+            min_item_deter = int(stripped_min_item_deter)
             if min_item_deter < 0 or min_item_deter > 100:
                 raise ValueError("Min item determinant value must be within 0 and 70")
         except Exception as e:
             raise ValueError(f"Bad min item determinant: {e}")
 
     max_item_deter = None
-    if "max_item_deter" in query.keys() and query["max_item_deter"].strip() != "":
+    stripped_max_item_deter = query["max_item_deter"].strip()
+    if "max_item_deter" in query_keys and stripped_max_item_deter != "":
         try:
-            max_item_deter = int(query["max_item_deter"])
+            max_item_deter = int(stripped_max_item_deter)
             if max_item_deter < 0 or max_item_deter > 100:
                 raise ValueError("Max item determinant value must be within 0 and 70")
         except Exception as e:
@@ -150,6 +161,9 @@ def validate_and_transform_query(query) -> VerifiableQuery:
             raise ValueError("Max water level above maximum")
 
     ignore_encounter_check = query["ignore_encounter_check_var"]
+
+    if encounter_area >= EncounterArea.FishingOld:
+        ignore_encounter_check = True
 
     synchronize_target = query["synchronize_target"]
     synchronize_natures = [None]
@@ -375,7 +389,12 @@ def search_details(details):
 def populate_synchronize(seed_engine, method_j, all_queries):
     if method_j.synchronize_target is not None and method_j.synchronize_target.strip() != "":
         synchronize_natures_list = method_j.synchronize_target.split("/")
-        target_natures = [x for x in synchronize_natures_list if x in Nature.__members__]
+        target_natures = [x for x in synchronize_natures_list if x in ["Hardy", "Lonely", "Brave", "Adamant",
+                                                                       "Naughty", "Bold", "Docile", "Relaxed",
+                                                                       "Impish", "Lax", "Timid", "Hasty",
+                                                                       "Serious", "Jolly", "Naive", "Modest",
+                                                                       "Mild", "Quiet", "Bashful", "Rash",
+                                                                       "Calm", "Gentle", "Sassy", "Careful", "Quirky"]]
 
         if len(target_natures) == 0:
             raw_query = [x for x in all_queries if x.label == method_j.synchronize_target]

@@ -49,24 +49,22 @@ class Method1(VerifiableQuery):
             if self.natures is not None and poke.nature not in self.natures:
                 continue
 
-            hidden_power = poke.get_hidden_power()
-
-            if self.hidden_power_types is not None and hidden_power[0] not in self.hidden_power_types:
+            if self.hidden_power_types is not None and poke.get_hidden_power()[0] not in self.hidden_power_types:
                 continue
 
-            if self.hidden_power_types is not None and self.min_hidden_power > int(hidden_power[1]):
+            if self.min_hidden_power is not None and self.min_hidden_power > int(poke.get_hidden_power()[1]):
                 continue
 
             poke_ivs = poke.ivs
 
             if self.min_ivs is not None:
-                low_ivs = [int(a) - b for a, b in zip(poke_ivs, self.min_ivs)]
+                low_ivs = [poke_ivs[x] - self.min_ivs[x] for x in range(0, 6)]
 
                 if min(low_ivs) < 0:
                     continue
 
             if self.max_ivs is not None:
-                high_ivs = [b - int(a) for a, b in zip(poke_ivs, self.max_ivs)]
+                high_ivs = [self.max_ivs[x] - poke_ivs[x] for x in range(0, 6)]
 
                 if min(high_ivs) < 0:
                     continue
@@ -159,7 +157,7 @@ class MethodJ(VerifiableQuery):
                 if self.min_item_deter is not None and int(poke_item) < self.min_item_deter:
                     continue
 
-                if not self.ignore_encounter_check and self.encounter_area <= EncounterArea.Surfing and not \
+                if not self.ignore_encounter_check and not \
                         seed_engine.has_encounter(frame, self.enc_rate, self.movement_rate):
                     continue
 
