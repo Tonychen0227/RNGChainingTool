@@ -14,6 +14,7 @@ class PKRS(VerifiableQuery):
     def __init__(self):
         self.min_frame = 0
         self.max_frame = 0
+        self.label = "PKRS"
 
     def verify_frames(self, seed_engine: PearlPlatSeedEngine):
         good = False
@@ -37,7 +38,7 @@ class Method1(VerifiableQuery):
         self.max_ivs = []
         self.ability = 0
         self.is_shiny = False
-        self.label = ""
+        self.label = "Method1"
         self.tid = 0
         self.sid = 0
 
@@ -106,7 +107,7 @@ class MethodJ(VerifiableQuery):
         self.ignore_encounter_check = False
         self.synchronize_target = []
         self.synchronize_natures = []
-        self.label = ""
+        self.label = "MethodJ"
         self.tid = 0
         self.sid = 0
 

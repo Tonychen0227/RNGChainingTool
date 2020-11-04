@@ -348,17 +348,17 @@ def search_details(details, is_dry_run : bool = False):
             for query in fixed_queries:
                 if isinstance(query, MethodJ):
                     query.synchronize_natures = [None]
-                    populate_synchronize(seed_engine, query, fixed_queries)
+                    populate_synchronize(seed_engine, query, fixed_queries, query_label)
                 verify_result = query.verify_frames(seed_engine)
                 if not verify_result:
                     raise WindowsError("")
-                class_name = query.__class__.__name__
-                if class_name in frames.keys():
-                    temp = frames[class_name]
+                query_label = query.label
+                if query_label in frames.keys():
+                    temp = frames[query_label]
                     temp.append(verify_result)
-                    frames[class_name] = temp
+                    frames[query_label] = temp
                 else:
-                    frames[class_name] = [verify_result]
+                    frames[query_label] = [verify_result]
 
             if not is_dry_run:
                 with open(log_file_name, 'a+') as outfile:
@@ -376,7 +376,9 @@ def search_details(details, is_dry_run : bool = False):
                     f.writerow([f"SIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
                                 f"0: {seed_engine.get_tid_sid()[0]} "
                                 f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
-                    f.writerow([str(frames)])
+                    for x in frames.keys():
+                        f.writerow([f"Frames for {x}: {frames[x]}"])
+                    f.writerow([])
 
                     del four_early, two_early, two_late, four_late
 
@@ -387,7 +389,7 @@ def search_details(details, is_dry_run : bool = False):
             continue
 
 
-def populate_synchronize(seed_engine, method_j, all_queries):
+def populate_synchronize(seed_engine, method_j, all_queries, results):
     if method_j.synchronize_target is not None and method_j.synchronize_target.strip() != "":
         synchronize_natures_list = method_j.synchronize_target.split("/")
         target_natures = [x for x in synchronize_natures_list if x in ["Hardy", "Lonely", "Brave", "Adamant",
@@ -398,10 +400,14 @@ def populate_synchronize(seed_engine, method_j, all_queries):
                                                                        "Calm", "Gentle", "Sassy", "Careful", "Quirky"]]
 
         if len(target_natures) == 0:
-            raw_query = [x for x in all_queries if x.label == method_j.synchronize_target]
+            raw_query = [x for x in all_queries if x.label == method_j.synchronize_target
+                         and x.label != x.__class__.__name__]
             if len(raw_query) == 1:
                 raw_query = raw_query[0]
-                result = raw_query.verify_frames(seed_engine)
+                if raw_query.label not in results:
+                    return
+
+                result = results[raw_query.label]
 
                 if result:
                     for x in result:
