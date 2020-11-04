@@ -358,7 +358,7 @@ def search():
 if __name__ == "__main__":
     Test()
 
-    if True:
+    if False:
         time = datetime.datetime.now()
         for x in range(0, 10):
             Benchmark()
