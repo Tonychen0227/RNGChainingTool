@@ -166,7 +166,10 @@ class MethodJ(VerifiableQuery):
                     continue
 
                 if self.encounter_area >= 1:
-                    level = seed_engine.get_level(frame, self.min_avail_level_water, self.max_avail_level_water)
+                    if self.encounter_area >= 2:
+                        level = seed_engine.get_level(frame+1, self.min_avail_level_water, self.max_avail_level_water)
+                    else:
+                        level = seed_engine.get_level(frame, self.min_avail_level_water, self.max_avail_level_water)
                     if level < self.min_level_water or level > self.max_level_water:
                         continue
 

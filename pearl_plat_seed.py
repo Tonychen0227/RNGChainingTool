@@ -51,35 +51,25 @@ class PearlPlatSeedEngine:
 
     def get_tid_sid(self):
         if not self.populated_tid_sid:
-            # MTFast(u32 seed, u32 advances=0)
-            mt = [0] * 400
-
-            seed = int(self.initial_seed.lower(), 16)
-
-            mt[0] = seed
+            m0 = int(self.initial_seed.lower(), 16)
 
             bits_32 = 1 << 32
 
-            for index in range(1, 399):
-                seed = (0x6c078965 * (seed ^ (seed >> 30)) + index) & (bits_32 - 1)
-                mt[index] = seed
+            m1 = (0x6c078965 * (m0 ^ (m0 >> 30)) + 1) & (bits_32 - 1)
+            m2 = (0x6c078965 * (m1 ^ (m1 >> 30)) + 2) & (bits_32 - 1)
 
-            # Shuffle
-            for i in range(0, 2):
-                m0 = mt[i]
-                m1 = mt[i + 1]
+            m398 = m2
+            for index in range(3, 399):
+                m398 = (0x6c078965 * (m398 ^ (m398 >> 30)) + index) & (bits_32 - 1)
 
-                y = (m0 & 0x80000000) | (m1 & 0x7fffffff)
+            y = (m1 & 0x80000000) | (m2 & 0x7fffffff)
+            y1 = y >> 1
 
-                y1 = y >> 1
+            if y & 1:
+                y1 ^= 0x9908b0df
 
-                if y & 1:
-                    y1 ^= 0x9908b0df
-                    y1 = y1
+            y = y1 ^ m398
 
-                mt[i] = y1 ^ mt[i + 397]
-
-            y = mt[1]
             y ^= (y >> 11)
             y ^= ((y << 7) & 0x9d2c5680)
             y ^= ((y << 15) & 0xefc60000)
@@ -87,8 +77,6 @@ class PearlPlatSeedEngine:
 
             tid = y & 0xFFFF
             sid = y >> 16
-
-            del mt
 
             self.tid = tid
             self.sid = sid
