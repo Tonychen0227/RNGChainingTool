@@ -377,8 +377,18 @@ def search_details(details, is_dry_run : bool = False):
                                 f"0: {seed_engine.get_tid_sid()[0]} "
                                 f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
                     for x in frames.keys():
-                        f.writerow([f"Frames for {x}: {frames[x]}"])
-                    f.writerow([])
+                        for query in fixed_queries:
+                            if query.label == x:
+                                if not query.__class__.__name__ == Method1.__name__ and not (query.__class__.__name__ == MethodJ.__name__\
+                                        and query.synchronize_natures == [None]):
+                                    f.writerow([f"Frames for {x}: {frames[x]}"])
+                                    continue
+                                for y in frames[x]:
+                                    for frame in y:
+                                        if query.__class__.__name__ == Method1.__name__:
+                                            f.writerow([f"{seed_engine.get_method_one_pokemon(frame).print()}"])
+                                        else:
+                                            f.writerow([f"{seed_engine.get_method_j_pokemon(frame, query.encounter_area)[0].print()}"])
 
                     del four_early, two_early, two_late, four_late
 

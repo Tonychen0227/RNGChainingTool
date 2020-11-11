@@ -28,10 +28,9 @@ class Pokemon:
         else:
             return self.gender_determinator < 190
 
-    def print(self) -> None:
-        print(f"Frame: {self.frame} PID: {self.pid.upper()} ({self.ability}) Occid {self.occid} {self.nature} "
-              f"{self.ivs} {self.get_hidden_power()} ITEM {self.item_determinator}")
-        return
+    def print(self) -> str:
+        return (f"Frame: {self.frame} PID: {self.pid.upper()} ({self.ability}) Occid {self.occid} {self.nature} "
+                f"{self.ivs} {self.get_hidden_power()} ITEM {self.item_determinator}")
 
     def get_hidden_power(self) -> (str, int):
         types = ["Fighting", "Flying", "Poison", "Ground", "Rock", "Bug", "Ghost", "Steel", "Fire",
