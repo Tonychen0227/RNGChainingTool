@@ -373,7 +373,7 @@ def search_details(details, is_dry_run : bool = False):
                                                    combination[4], combination[5] + 2)
                     four_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
                                                     combination[4], combination[5] + 4)
-                    f.writerow([f"SIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
+                    f.writerow([f"TIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
                                 f"0: {seed_engine.get_tid_sid()[0]} "
                                 f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
                     for x in frames.keys():
@@ -389,6 +389,7 @@ def search_details(details, is_dry_run : bool = False):
                                             f.writerow([f"{seed_engine.get_method_one_pokemon(frame).print()}"])
                                         else:
                                             f.writerow([f"{seed_engine.get_method_j_pokemon(frame, query.encounter_area)[0].print()}"])
+                        f.writerow([])
 
                     del four_early, two_early, two_late, four_late
 
