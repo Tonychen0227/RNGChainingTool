@@ -451,4 +451,24 @@ class Test:
 
         assert seed_engine.has_pokerus(609)
 
+        # region Method1 with PKRS
+
+        frame = 605  # Actual frame 606
+
+        poke = seed_engine.get_method_one_pokemon(frame)
+
+        assert poke.pid == "b1abb23a"
+
+        assert poke.ivs == (11, 24, 10, 10, 13, 17)
+
+        assert poke.nature == "Naive"
+
+        assert poke.ability == 0
+
+        assert poke.get_hidden_power() == ("Water", 43)
+
+        assert seed_engine.has_pokerus(poke.occid)
+
+        # endregion
+
         # endregion

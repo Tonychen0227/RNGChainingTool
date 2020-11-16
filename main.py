@@ -16,6 +16,8 @@ from tests import Test
 def fill_labels(list_labels, start_row):
     current_column = 0
     for label in list_labels.keys():
+        if label in ["HGSS Lottery", "DPPt Lottery"]:
+            continue
         tk.Label(master, text=label).grid(row=start_row, column=current_column)
         current_column += 1
         labels[label].grid(row=start_row, column=current_column)
@@ -42,7 +44,7 @@ def fill_queries():
 
         start_row += 1
         for item in query.keys():
-            if item in ["type", "encounter_area_var", "is_shiny_var", "ignore_encounter_check_var"]:
+            if item in ["type", "encounter_area_var", "is_shiny_var", "has_pokerus_var", "ignore_encounter_check_var"]:
                 continue
             tk.Label(master, text=item).grid(row=start_row, column=current_column)
             current_column += 1
@@ -63,9 +65,9 @@ def get_raws_from_query(query):
         if key == "type":
             ret[key] = query[key]
             continue
-        if key in ["encounter_area", "is_shiny", "ignore_encounter_check"]:
+        if key in ["encounter_area", "is_shiny", "has_pokerus", "ignore_encounter_check"]:
             continue
-        if key in ["encounter_area_var", "is_shiny_var", "ignore_encounter_check_var"]:
+        if key in ["encounter_area_var", "is_shiny_var", "has_pokerus_var", "ignore_encounter_check_var"]:
             ret[key] = query[key].get()
             continue
         ret[key] = query[key].get()
@@ -78,6 +80,8 @@ def extract_details():
     }
 
     for label in labels.keys():
+        if label in ["HGSS Lottery?", "DPPt Lottery?"]:
+            continue
         key = ''.join(label.split(' '))
         saveable[key] = labels[label].get()
 
@@ -125,8 +129,11 @@ def load_file():
     for label in labels.keys():
         key = ''.join(label.split(' '))
         if key in existing:
-            labels[label].delete(0, tk.END)
-            labels[label].insert(0, existing[key])
+            if key in ["HGSSLottery", "DPPtLottery"]:
+                labels[label].set(existing[key])
+            else:
+                labels[label].delete(0, tk.END)
+                labels[label].insert(0, existing[key])
 
     if "queries" in existing:
         for query in existing["queries"]:
@@ -138,7 +145,7 @@ def load_file():
                         if key == "type":
                             current[key] = query[key]
                             continue
-                        if key in ["encounter_area_var", "is_shiny_var", "ignore_encounter_check_var"]:
+                        if key in ["encounter_area_var", "is_shiny_var", "has_pokerus_var", "ignore_encounter_check_var"]:
                             current[key].set(query[key])
                             continue
                         current[key].delete(0, tk.END)
@@ -152,7 +159,7 @@ def load_file():
                         if key == "type":
                             current[key] = query[key]
                             continue
-                        if key in ["is_shiny_var"]:
+                        if key in ["is_shiny_var", "has_pokerus_var"]:
                             current[key].set(query[key])
                             continue
                         current[key].delete(0, tk.END)
@@ -229,6 +236,9 @@ def add_method_j():
     variable5 = tk.BooleanVar(master)
     button5 = tk.Checkbutton(master, variable=variable5)
 
+    variable6 = tk.BooleanVar(master)
+    button6 = tk.Checkbutton(master, variable=variable6)
+
     entry16 = tk.Entry(master)
     entry16.insert(0, 20)
 
@@ -264,6 +274,8 @@ def add_method_j():
         "ignore_encounter_check_var": variable4,
         "is_shiny": button5,
         "is_shiny_var": variable5,
+        "has_pokerus": button6,
+        "has_pokerus_var": variable6,
         "min_level_water": entry16,
         "max_level_water": entry19,
         "min_avail_level_water": entry17,
@@ -300,6 +312,9 @@ def add_method_1():
     variable = tk.BooleanVar(master)
     button = tk.Checkbutton(master, variable=variable)
 
+    variable6 = tk.BooleanVar(master)
+    button6 = tk.Checkbutton(master, variable=variable6)
+
     entry10 = tk.Entry(master)
     entry10.insert(0, 1000)
 
@@ -317,6 +332,8 @@ def add_method_1():
         "ability": entry9,
         "is_shiny": button,
         "is_shiny_var": variable,
+        "has_pokerus": button6,
+        "has_pokerus_var": variable6,
         "min_frame": entry10,
         "max_frame": entry11
     }
@@ -405,6 +422,10 @@ if __name__ == "__main__":
     max_delay = tk.Entry(master)
     tid = tk.Entry(master)
     sid = tk.Entry(master)
+    diamond_lottery = tk.BooleanVar(master)
+    diamond_lottery_button = tk.Checkbutton(master, variable=diamond_lottery)
+    hgss_lottery = tk.BooleanVar(master)
+    hgss_lottery_button = tk.Checkbutton(master, variable=hgss_lottery)
 
     labels = {
         "Min month": min_month,
@@ -420,7 +441,11 @@ if __name__ == "__main__":
         "Min delay": min_delay,
         "Max delay": max_delay,
         "tid": tid,
-        "sid": sid
+        "sid": sid,
+        "DPPt Lottery?": diamond_lottery_button,
+        "DPPt Lottery": diamond_lottery,
+        "HGSS Lottery?": hgss_lottery_button,
+        "HGSS Lottery": hgss_lottery
     }
 
     current_row = fill_labels(labels, current_row + 1)

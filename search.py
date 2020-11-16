@@ -90,6 +90,7 @@ def validate_and_transform_query(query) -> VerifiableQuery:
             raise ValueError(f"Bad ability: {e}")
 
     is_shiny = query["is_shiny_var"]
+    has_pokerus = query["has_pokerus_var"]
 
     if query["type"] == "Method1":
         ret = Method1()
@@ -102,6 +103,7 @@ def validate_and_transform_query(query) -> VerifiableQuery:
         ret.max_ivs = max_ivs
         ret.ability = ability
         ret.is_shiny = is_shiny
+        ret.gives_pokerus = has_pokerus
         ret.label = label
         return ret
 
@@ -178,6 +180,7 @@ def validate_and_transform_query(query) -> VerifiableQuery:
     ret.max_ivs = max_ivs
     ret.ability = ability
     ret.is_shiny = is_shiny
+    ret.gives_pokerus = has_pokerus
     ret.enc_slots = enc_slots
     ret.min_item_deter = min_item_deter
     ret.max_item_deter = max_item_deter
@@ -208,6 +211,9 @@ def search_details(details, is_dry_run : bool = False):
     max_secs_internal = try_get("Maxsecs", details, int)
     min_delay_internal = try_get("Mindelay", details, int)
     max_delay_internal = try_get("Maxdelay", details, int)
+    hgss_lottery_internal = try_get("HGSSLottery", details, bool)
+    dppt_lottery_internal = try_get("DPPtLottery", details, bool)
+
     if details["tid"] is not None and details["tid"].strip() != "":
         tid = int(details["tid"])
     else:
@@ -266,6 +272,9 @@ def search_details(details, is_dry_run : bool = False):
         secs = [x for x in range(min_secs_internal, 60)] + [x for x in range(1, max_secs_internal + 1)]
     else:
         secs = [x for x in range(min_secs_internal, max_secs_internal + 1)]
+
+    if dppt_lottery_internal and hgss_lottery_internal:
+        raise ValueError("Cannot check DPPt AND HGSS Lottery")
 
     for month in months:
         for day in days:
@@ -360,6 +369,19 @@ def search_details(details, is_dry_run : bool = False):
                 else:
                     frames[query_label] = [verify_result]
 
+            if dppt_lottery_internal or hgss_lottery_internal:
+                tid = seed_engine.get_tid_sid()[0]
+                dppt_lottery = int(seed_engine.call(1), 16)
+                hgss_lottery = int(seed_engine.call(3), 16)
+
+                if dppt_lottery_internal:
+                    if dppt_lottery != tid:
+                        raise WindowsError("")
+
+                if hgss_lottery_internal:
+                    if hgss_lottery != tid or hgss_lottery != int("01001"):
+                        raise WindowsError("")
+
             if not is_dry_run:
                 with open(log_file_name, 'a+') as outfile:
                     f = csv.writer(outfile, lineterminator='\n')
@@ -389,7 +411,8 @@ def search_details(details, is_dry_run : bool = False):
                                             f.writerow([f"{seed_engine.get_method_one_pokemon(frame).print()}"])
                                         else:
                                             f.writerow([f"{seed_engine.get_method_j_pokemon(frame, query.encounter_area)[0].print()}"])
-                        f.writerow([])
+
+                    f.writerow([])
 
                     del four_early, two_early, two_late, four_late
 

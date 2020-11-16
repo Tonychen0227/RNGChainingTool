@@ -38,6 +38,7 @@ class Method1(VerifiableQuery):
         self.max_ivs = []
         self.ability = 0
         self.is_shiny = False
+        self.gives_pokerus = False
         self.label = "Method1"
         self.tid = 0
         self.sid = 0
@@ -76,6 +77,9 @@ class Method1(VerifiableQuery):
             if self.is_shiny and not seed_engine.is_shiny(poke, self.tid, self.sid):
                 continue
 
+            if self.gives_pokerus and not seed_engine.has_pokerus(poke.occid):
+                continue
+
             if not good:
                 good = []
             good.append(frame)
@@ -94,6 +98,7 @@ class MethodJ(VerifiableQuery):
         self.max_ivs = []
         self.ability = 0
         self.is_shiny = False
+        self.gives_pokerus = False
         self.enc_slots = []
         self.min_item_deter = 0
         self.max_item_deter = 100
@@ -163,6 +168,9 @@ class MethodJ(VerifiableQuery):
                     continue
 
                 if self.enc_slots is not None and int(slot) not in self.enc_slots:
+                    continue
+
+                if self.gives_pokerus and not seed_engine.has_pokerus(poke.occid):
                     continue
 
                 if self.encounter_area >= 1:
