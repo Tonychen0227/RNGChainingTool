@@ -1,0 +1,12 @@
+*_Backup.json
+build
+dist
+*.csv
+DemoPlatFull*
+main.spec
+*.json
+!DemoPlat.json
+Results/*
+.idea/*
+__pycache__/*
+*/__pycache__
