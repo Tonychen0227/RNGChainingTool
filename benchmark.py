@@ -9,5 +9,7 @@ class Benchmark:
             existing = json.load(json_file)
 
         existing["Maxdelay"] = "7000"
+        existing["HGSSLottery"] = False
+        existing["DPPtLottery"] = False
 
         search_details(existing, True)

@@ -9,6 +9,7 @@
       "min_ivs": "20/20/20/20/20/20",
       "max_ivs": "",
       "ability": "",
+      "has_pokerus_var": false,
       "is_shiny_var": false,
       "min_frame": "100",
       "max_frame": "150"
@@ -32,6 +33,7 @@
       "movement_rate": "40",
       "encounter_area_var": "Grass",
       "ignore_encounter_check_var": false,
+      "has_pokerus_var": false,
       "is_shiny_var": false,
       "min_level_water": "20",
       "max_level_water": "40",
@@ -63,6 +65,7 @@
       "encounter_area_var": "Surfing",
       "ignore_encounter_check_var": false,
       "is_shiny_var": false,
+      "has_pokerus_var": false,
       "min_level_water": "26",
       "max_level_water": "26",
       "min_avail_level_water": "20",
@@ -81,6 +84,7 @@
   "Maxsecs": "46",
   "Mindelay": "5719",
   "Maxdelay": "5719",
+  "CPUCores": "1",
   "tid": "",
   "sid": ""
 }

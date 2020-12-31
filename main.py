@@ -12,6 +12,8 @@ from benchmark import Benchmark
 from search import search_details
 from tests import Test
 
+import multiprocessing
+
 
 def fill_labels(list_labels, start_row):
     current_column = 0
@@ -373,6 +375,7 @@ def search():
 
 
 if __name__ == "__main__":
+
     Test()
 
     if False:
@@ -426,6 +429,7 @@ if __name__ == "__main__":
     diamond_lottery_button = tk.Checkbutton(master, variable=diamond_lottery)
     hgss_lottery = tk.BooleanVar(master)
     hgss_lottery_button = tk.Checkbutton(master, variable=hgss_lottery)
+    cpu_cores = tk.Entry(master)
 
     labels = {
         "Min month": min_month,
@@ -445,7 +449,8 @@ if __name__ == "__main__":
         "DPPt Lottery?": diamond_lottery_button,
         "DPPt Lottery": diamond_lottery,
         "HGSS Lottery?": hgss_lottery_button,
-        "HGSS Lottery": hgss_lottery
+        "HGSS Lottery": hgss_lottery,
+        "CPU Cores": cpu_cores
     }
 
     current_row = fill_labels(labels, current_row + 1)

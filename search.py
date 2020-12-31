@@ -1,10 +1,13 @@
 import csv
 import random
 import datetime
+import threading
 
 from models.enums import EncounterArea
 from models.queries import PKRS, Method1, MethodJ, VerifiableQuery
 from pearl_plat_seed import PearlPlatSeedEngine
+
+import multiprocessing
 
 
 def try_get(key, details, type_to_cast):
@@ -198,7 +201,123 @@ def validate_and_transform_query(query) -> VerifiableQuery:
     return ret
 
 
-def search_details(details, is_dry_run : bool = False):
+def validate_combination(combination, fixed_queries, max_frames, log_file_name, dppt_lottery_internal,
+                         hgss_lottery_internal, is_dry_run):
+    seed_engine = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                      combination[4], combination[5])
+
+    if seed_engine.get_initial_seed() == "EC0D1430":
+        print("FOOO")
+        pass
+
+    seed_engine.populate(max_frames)
+
+    frames = {}
+    for query in fixed_queries:
+        query_label = query.label
+        if isinstance(query, MethodJ):
+            query.synchronize_natures = [None]
+            populate_synchronize(seed_engine, query, fixed_queries, query_label)
+        verify_result = query.verify_frames(seed_engine)
+        if not verify_result:
+            raise WindowsError("")
+        if query_label in frames.keys():
+            temp = frames[query_label]
+            temp.append(verify_result)
+            frames[query_label] = temp
+        else:
+            frames[query_label] = [verify_result]
+
+    if dppt_lottery_internal or hgss_lottery_internal:
+        tid = seed_engine.get_tid_sid()[0]
+        dppt_lottery = int(seed_engine.call(1), 16)
+        hgss_lottery = int(seed_engine.call(3), 16)
+
+        if dppt_lottery_internal:
+            if dppt_lottery != tid:
+                raise WindowsError("")
+
+        if hgss_lottery_internal:
+            if hgss_lottery != tid and hgss_lottery != int("01001"):
+                raise WindowsError("")
+
+    if not is_dry_run:
+        with open(log_file_name, 'a+') as outfile:
+            f = csv.writer(outfile, lineterminator='\n')
+            f.writerow([f"Seed {seed_engine.get_initial_seed()} (Year 2000) (on {combination[0]}/{combination[1]} "
+                        f"at {combination[2]}:{combination[3]}:{combination[4]} Delay {combination[5]})"])
+            four_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                             combination[4], combination[5] - 4)
+            two_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                            combination[4], combination[5] - 2)
+            two_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                           combination[4], combination[5] + 2)
+            four_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
+                                            combination[4], combination[5] + 4)
+            f.writerow([f"TIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
+                        f"0: {seed_engine.get_tid_sid()[0]} "
+                        f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
+            for x in frames.keys():
+                for query in fixed_queries:
+                    if query.label == x:
+                        if not query.__class__.__name__ == Method1.__name__ and not (
+                                query.__class__.__name__ == MethodJ.__name__ \
+                                and query.synchronize_natures == [None]):
+                            f.writerow([f"Frames for {x}: {frames[x]}"])
+                            continue
+                        for y in frames[x]:
+                            for frame in y:
+                                if query.__class__.__name__ == Method1.__name__:
+                                    f.writerow([f"{seed_engine.get_method_one_pokemon(frame).print()}"])
+                                else:
+                                    f.writerow(
+                                        [f"{seed_engine.get_method_j_pokemon(frame, query.encounter_area)[0].print()}"])
+
+            f.writerow([])
+
+            del four_early, two_early, two_late, four_late
+
+    del seed_engine
+
+
+def delegate_thread(combinations, thread_number, fixed_queries, max_frames, log_file_name, dppt_lottery_internal,
+                         time, progress_file_name, hgss_lottery_internal, is_dry_run):
+    progress_file_name += "THREAD_" + str(thread_number) + ".csv"
+    log_file_name += "THREAD_" + str(thread_number) + ".csv"
+    total_combinations = len(combinations)
+
+    checked = 0
+
+    for combination in combinations:
+        checked += 1
+
+        if not is_dry_run and checked % 100 == 0:
+            current_time = datetime.datetime.now()
+            total_seconds = (current_time - time).total_seconds()
+            with open(progress_file_name, 'a+') as progress_file:
+                progress = csv.writer(progress_file, lineterminator='\n')
+                progress.writerow([f"Checked {checked} of {total_combinations}, Elapsed {total_seconds:.2f}s, ETA "
+                                   f"{((total_seconds / checked) * (total_combinations - checked)):.2f}s"])
+
+        try:
+            validate_combination(combination, fixed_queries, max_frames, log_file_name, dppt_lottery_internal,
+                                 hgss_lottery_internal, is_dry_run)
+        except WindowsError:
+            continue
+
+
+def chunks(l, n):
+    """ Yield n successive chunks from l.
+    Credits to: https://stackoverflow.com/questions/2130016/splitting-a-list-into-n-parts-of-approximately-equal-length
+    """
+    newn = int(len(l) / n)
+    for i in range(0, n-1):
+        yield l[i*newn:i*newn+newn]
+    yield l[n*newn-newn:]
+
+
+def search_details(details, is_dry_run: bool = False):
+    #region SETUP
     min_month_internal = try_get("Minmonth", details, int)
     max_month_internal = try_get("Maxmonth", details, int)
     min_day_internal = try_get("Minday", details, int)
@@ -213,6 +332,7 @@ def search_details(details, is_dry_run : bool = False):
     max_delay_internal = try_get("Maxdelay", details, int)
     hgss_lottery_internal = try_get("HGSSLottery", details, bool)
     dppt_lottery_internal = try_get("DPPtLottery", details, bool)
+    cpu_cores_internal = try_get("CPUCores", details, int)
 
     if details["tid"] is not None and details["tid"].strip() != "":
         tid = int(details["tid"])
@@ -244,6 +364,9 @@ def search_details(details, is_dry_run : bool = False):
 
     if min_delay_internal < 0:
         raise ValueError("Delay must not be lower than 0")
+
+    if cpu_cores_internal > multiprocessing.cpu_count() or cpu_cores_internal < 1:
+        raise ValueError(f"Cores must be between 1 and {multiprocessing.cpu_count()}")
 
     values = []
     ab_combinations = []
@@ -311,16 +434,14 @@ def search_details(details, is_dry_run : bool = False):
     del ab_combinations
 
     checked = 0
-    log_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}.csv'
-    progress_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}_progress.csv'
+    log_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}'
+    progress_file_name = f'{datetime.datetime.now().strftime("%Y_%b_%d_%H_%M_%S")}_progress'
     if "queries" not in details.keys():
         return
 
     random.shuffle(combinations)
 
     time = datetime.datetime.now()
-
-    total_combinations = len(combinations)
 
     inner_queries = [x for x in details["queries"]]
 
@@ -336,91 +457,25 @@ def search_details(details, is_dry_run : bool = False):
 
     del inner_queries
 
-    for combination in combinations:
-        checked += 1
+    # endregion SETUP
 
-        seed_engine = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                          combination[4], combination[5])
+    combination_chunks = list(chunks(combinations, cpu_cores_internal))
 
-        seed_engine.populate(max_frames)
+    threads = list()
+    for index in range(cpu_cores_internal):
+        chunk = combination_chunks[index]
 
-        if not is_dry_run and checked % 100 == 0:
-            current_time = datetime.datetime.now()
-            total_seconds = (current_time - time).total_seconds()
-            with open(progress_file_name, 'a+') as progress_file:
-                progress = csv.writer(progress_file, lineterminator='\n')
-                progress.writerow([f"Checked {checked} of {total_combinations}, Elapsed {total_seconds:.2f}s, ETA "
-                                   f"{((total_seconds / checked) * (total_combinations - checked)):.2f}s"])
+        print("Main    : create and start thread %d.", index)
+        x = threading.Thread(target=delegate_thread, args=(chunk, index, fixed_queries,
+                                                           max_frames, log_file_name, dppt_lottery_internal, time,
+                                                           progress_file_name, hgss_lottery_internal, is_dry_run))
+        threads.append(x)
+        x.start()
 
-        try:
-            frames = {}
-            for query in fixed_queries:
-                query_label = query.label
-                if isinstance(query, MethodJ):
-                    query.synchronize_natures = [None]
-                    populate_synchronize(seed_engine, query, fixed_queries, query_label)
-                verify_result = query.verify_frames(seed_engine)
-                if not verify_result:
-                    raise WindowsError("")
-                if query_label in frames.keys():
-                    temp = frames[query_label]
-                    temp.append(verify_result)
-                    frames[query_label] = temp
-                else:
-                    frames[query_label] = [verify_result]
-
-            if dppt_lottery_internal or hgss_lottery_internal:
-                tid = seed_engine.get_tid_sid()[0]
-                dppt_lottery = int(seed_engine.call(1), 16)
-                hgss_lottery = int(seed_engine.call(3), 16)
-
-                if dppt_lottery_internal:
-                    if dppt_lottery != tid:
-                        raise WindowsError("")
-
-                if hgss_lottery_internal:
-                    if hgss_lottery != tid or hgss_lottery != int("01001"):
-                        raise WindowsError("")
-
-            if not is_dry_run:
-                with open(log_file_name, 'a+') as outfile:
-                    f = csv.writer(outfile, lineterminator='\n')
-                    f.writerow([f"Seed {seed_engine.get_initial_seed()} (Year 2000) (on {combination[0]}/{combination[1]} "
-                                f"at {combination[2]}:{combination[3]}:{combination[4]} Delay {combination[5]})"])
-                    four_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                     combination[4], combination[5] - 4)
-                    two_early = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                    combination[4], combination[5] - 2)
-                    two_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                   combination[4], combination[5] + 2)
-                    four_late = PearlPlatSeedEngine(combination[0], combination[1], combination[2], combination[3],
-                                                    combination[4], combination[5] + 4)
-                    f.writerow([f"TIDs: -4: {four_early.get_tid_sid()[0]} -2: {two_early.get_tid_sid()[0]} "
-                                f"0: {seed_engine.get_tid_sid()[0]} "
-                                f"+2: {two_late.get_tid_sid()[0]} +4: {four_late.get_tid_sid()[0]}"])
-                    for x in frames.keys():
-                        for query in fixed_queries:
-                            if query.label == x:
-                                if not query.__class__.__name__ == Method1.__name__ and not (query.__class__.__name__ == MethodJ.__name__\
-                                        and query.synchronize_natures == [None]):
-                                    f.writerow([f"Frames for {x}: {frames[x]}"])
-                                    continue
-                                for y in frames[x]:
-                                    for frame in y:
-                                        if query.__class__.__name__ == Method1.__name__:
-                                            f.writerow([f"{seed_engine.get_method_one_pokemon(frame).print()}"])
-                                        else:
-                                            f.writerow([f"{seed_engine.get_method_j_pokemon(frame, query.encounter_area)[0].print()}"])
-
-                    f.writerow([])
-
-                    del four_early, two_early, two_late, four_late
-
-            del seed_engine
-
-        except WindowsError:
-            del seed_engine
-            continue
+    for index, thread in enumerate(threads):
+        print("Main    : before joining thread %d.", index)
+        thread.join()
+        print("Main    : thread %d done", index)
 
 
 def populate_synchronize(seed_engine, method_j, all_queries, results):
